@@ -99,19 +99,20 @@ class Task1:
                 feature_vector = np.transpose(feature_vector)
                 feature_vector = color.rgb2gray(feature_vector)
                 data_matrix.append(feature_vector)
-
             data_matrix = np.mean(data_matrix, axis=0)
 
         elif feature_model == 'ELBP':
             for i in imageData:
                 feature_vector = self.ELBP(i)
                 data_matrix.append(feature_vector)
+            data_matrix = np.mean(data_matrix, axis=0)
 
         elif feature_model == 'HOG':
             for i in imageData:
                 feature_vector = self.HOG(i)
                 feature_vector = feature_vector.reshape(42, 42)
                 data_matrix.append(feature_vector)
+            data_matrix = np.mean(data_matrix, axis=0)
 
         return data_matrix
 
@@ -128,7 +129,7 @@ class Task1:
         return latent_semantic
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    #parser = argparse.ArgumentParser()
 
     feature_model = str(input('Choose the feature model: '))
     image_type = str(input('Choose image type: '))
