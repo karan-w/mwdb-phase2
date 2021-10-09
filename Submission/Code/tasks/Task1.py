@@ -8,7 +8,7 @@ from matplotlib import image
 from sklearn.datasets import fetch_olivetti_faces
 from sklearn.decomposition import TruncatedSVD
 from numpy import dot
-from gensim.models import LdaModel
+# from gensim.models import LdaModel
 import json
 
 class Task1:
@@ -63,8 +63,10 @@ class Task1:
         return HOG_features
 
     def PCA(self, feature_vector, k):
+
         fv_meaned = feature_vector - np.mean(feature_vector, axis=0)
         cov_mat = np.cov(fv_meaned, rowvar=False)
+
         eigen_values, eigen_vectors = np.linalg.eigh(cov_mat)
         
         #sorting eigen values in descending order
@@ -86,9 +88,9 @@ class Task1:
         transformed_matrix = svd.fit_transform(feature_vector)
         return transformed_matrix
 
-    def LDA(self, feature_vector, k):
-        latent_semantics = LdaModel(feature_vector, num_topics=k)
-        return latent_semantics
+    # def LDA(self, feature_vector, k):
+    #     latent_semantics = LdaModel(feature_vector, num_topics=k)
+    #     return latent_semantics
 
     def features(self, feature_model, imageData):
         data_matrix = []
@@ -123,8 +125,8 @@ class Task1:
         elif technique == 'SVD':
             latent_semantic = self.SVD(feature_vector, k)
 
-        elif technique == 'LDA':
-            latent_semantic = self.LDA(feature_vector, k)
+        # elif technique == 'LDA':
+        #     latent_semantic = self.LDA(feature_vector, k)
 
         return latent_semantic
 
