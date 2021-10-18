@@ -144,8 +144,8 @@ if __name__ == "__main__":
     #parser = argparse.ArgumentParser()
 
     feature_model = 'ELBP'#str(input('Choose the feature model: '))
-    # k_value = int(input('Enter the value of k: '))
-    # reduction_method = str(input('Choose the dimensionality reduction technique: '))
+    k_value = 10#int(input('Enter the value of k: '))
+    reduction_method = 'PCA'#str(input('Choose the dimensionality reduction technique: '))
 
     #detail images not present
     image_types = ['cc', 'con', 'emboss', 'jitter', 'neg', 'noise01', 'noise02', 'original', 'poster', 'rot', 'smooth', 'stipple']
@@ -185,7 +185,27 @@ if __name__ == "__main__":
         for j in range(len(dist_dist_matrix[1])):
             sim_sim_matrix[i][j] = 1 - dist_dist_matrix[i][j]
 
+    #convert to numpy array
     sim_sim_matrix = np.array(sim_sim_matrix)
+
+    ls = Task4().dimension_red(reduction_method, sim_sim_matrix, k_value)
+
+    output = []
+    for i in range(len(ls[0])):
+        subject_weight_pairs = dict.fromkeys(['Latent Semantic', 'Subjects', 'Weights'])
+        subjects = []
+        weights = []
+        for j in range(len(ls)):
+            subjects.append(str(j))
+            weights.append(ls[j][i])
+        subject_weight_pairs['Latent Semantic'] = i
+        subject_weight_pairs['Subjects'] = [x for x,_ in sorted(zip(subjects,weights), reverse=True)]
+        subject_weight_pairs['Weights'] = [x for _,x in sorted(zip(subjects,weights), reverse=True)]
+        output.append(subject_weight_pairs)
+
+    with open('task4-output.json', 'w') as fp:
+        for dictionary in output:
+            json.dump(dictionary, fp, indent=4)
 
     # parser.add_argument('--model', type=str, required=True)
     # parser.add_argument('--x', type=str, required=True)
