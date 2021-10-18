@@ -45,6 +45,7 @@ class Task4:
         sd_moment = np.reshape(sd_moment, (8, 8))       #reshaping the array
         skew_moment = np.reshape(skew_moment, (8, 8))   #reshaping the array
         feature_vector.append([mean_moment, sd_moment, skew_moment])
+        feature_vector = np.mean(feature_vector[0], axis=0)
 
         return feature_vector
 
@@ -107,9 +108,6 @@ class Task4:
         if feature_model == 'CM':
             for i in imageData:
                 feature_vector = self.color_moments(i)
-                feature_vector = np.squeeze(feature_vector)
-                feature_vector = np.transpose(feature_vector)
-                feature_vector = color.rgb2gray(feature_vector)
                 data_matrix.append(feature_vector)
             data_matrix = np.mean(data_matrix, axis=0)
 
