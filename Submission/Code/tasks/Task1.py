@@ -1,14 +1,14 @@
-import argparse
+import os
 import numpy as np
-#import skimage
 from skimage import feature, exposure, color
 import matplotlib.pyplot as plt
 from matplotlib import image
-#import sklearn
+import sklearn
 from sklearn.datasets import fetch_olivetti_faces
-from sklearn.decomposition import TruncatedSVD
+from scipy.linalg import svd
 from numpy import dot
-# from gensim.models import LdaModel
+from sklearn.decomposition import LatentDirichletAllocation
+from gensim.models import LdaModel
 import json
 
 class Task1:
@@ -43,6 +43,7 @@ class Task1:
         sd_moment = np.reshape(sd_moment, (8, 8))       #reshaping the array
         skew_moment = np.reshape(skew_moment, (8, 8))   #reshaping the array
         feature_vector.append([mean_moment, sd_moment, skew_moment])
+        feature_vector = np.mean(feature_vector[0], axis=0)
 
         return feature_vector
 
@@ -81,25 +82,32 @@ class Task1:
         return X_reduced
 
     def SVD(self, feature_vector, k):
-        #svd() function will return U matrix, 's' vector of singular values, and V matrix
-        #using truncated SVD to for number_of_components = k, which returns required 'k' singular values and trim the rest.
-        svd = TruncatedSVD(n_components=k)
+        U, s, V_t = svd(feature_vector)
+        
+        #creating mxn sigma matrix
+        Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
 
-        transformed_matrix = svd.fit_transform(feature_vector)
+        #populating sigma with nxn diagonal matrix
+        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)  
+
+        k_latent = k
+        Sigma = Sigma[:, :k_latent]
+        V_t = V_t[:k_latent, :]
+        transformed_matrix = U.dot(Sigma)
+
         return transformed_matrix
 
-    # def LDA(self, feature_vector, k):
-    #     latent_semantics = LdaModel(feature_vector, num_topics=k)
-    #     return latent_semantics
+    def LDA(self, feature_vector, k):
+        lda_modal = LatentDirichletAllocation(n_components=k)
+        lda_modal.fit(feature_vector)
+        ls = lda_modal.transform(feature_vector)
+        return ls
 
     def features(self, feature_model, imageData):
         data_matrix = []
         if feature_model == 'CM':
             for i in imageData:
                 feature_vector = self.color_moments(i)
-                feature_vector = np.squeeze(feature_vector)
-                feature_vector = np.transpose(feature_vector)
-                feature_vector = color.rgb2gray(feature_vector)
                 data_matrix.append(feature_vector)
             data_matrix = np.mean(data_matrix, axis=0)
 
