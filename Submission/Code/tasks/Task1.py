@@ -47,6 +47,7 @@ class Task1:
         sd_moment = np.reshape(sd_moment, (8, 8))       #reshaping the array
         skew_moment = np.reshape(skew_moment, (8, 8))   #reshaping the array
         feature_vector.append([mean_moment, sd_moment, skew_moment])
+        feature_vector = np.mean(feature_vector[0], axis=0)
 
         return feature_vector
 
