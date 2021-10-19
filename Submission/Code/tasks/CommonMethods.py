@@ -6,13 +6,13 @@ from matplotlib import image
 import sklearn
 from sklearn.datasets import fetch_olivetti_faces
 from scipy.linalg import svd
+from scipy.linalg import inv
 from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
 # from gensim.models import LdaModel
 import json
-from Submission.Code.tasks.CommonMethods import CommonMethods
 
-class Task1:
+class CommonMethods:
     def __init__(self):
         pass
 
@@ -26,41 +26,44 @@ class Task1:
 
         lower_index = 0
         upper_index = 8
-        
-        while(lower_index != 64 and upper_index != 72):
+
+        while (lower_index != 64 and upper_index != 72):
             for j in range(0, 8):
                 for k in range(lower_index, upper_index):
                     current_window.append(image_values[k].reshape(8, 8)[j])
                 squeezed_array = np.squeeze(current_window)
                 mean_moment.append(squeezed_array.mean())
                 sd_moment.append(np.std(squeezed_array))
-                skew_moment.append(3*(np.subtract(squeezed_array.mean(), np.median(squeezed_array)))/np.std(squeezed_array))
+                skew_moment.append(
+                    3 * (np.subtract(squeezed_array.mean(), np.median(squeezed_array))) / np.std(squeezed_array))
                 current_window.clear()
             if lower_index < 64 and upper_index < 72:
-                lower_index+=8
-                upper_index+=8
+                lower_index += 8
+                upper_index += 8
 
-        mean_moment = np.reshape(mean_moment, (8, 8))   #reshaping the array
-        sd_moment = np.reshape(sd_moment, (8, 8))       #reshaping the array
-        skew_moment = np.reshape(skew_moment, (8, 8))   #reshaping the array
+        mean_moment = np.reshape(mean_moment, (8, 8))  # reshaping the array
+        sd_moment = np.reshape(sd_moment, (8, 8))  # reshaping the array
+        skew_moment = np.reshape(skew_moment, (8, 8))  # reshaping the array
         feature_vector.append([mean_moment, sd_moment, skew_moment])
         feature_vector = np.mean(feature_vector[0], axis=0)
 
         return feature_vector
 
     def ELBP(self, input_image):
-        #input_image = image_df['image_values'][i].reshape(64, 64)
-        ELBP_features = feature.local_binary_pattern(input_image, P=8, R=1, method="ror") #"ror" method is for extension of default 
-                                                                                            #implementation which is rotation invariant.
-        
+        # input_image = image_df['image_values'][i].reshape(64, 64)
+        ELBP_features = feature.local_binary_pattern(input_image, P=8, R=1,
+                                                     method="ror")  # "ror" method is for extension of default
+        # implementation which is rotation invariant.
+
         return ELBP_features
 
     def HOG(self, input_image):
-        #hog_image = []
-        #input_image = image_df['image_values'][i].reshape(64, 64)
-        feature_descrip, image = feature.hog(input_image, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2), block_norm='L2-Hys', visualize=True)
+        # hog_image = []
+        # input_image = image_df['image_values'][i].reshape(64, 64)
+        feature_descrip, image = feature.hog(input_image, orientations=9, pixels_per_cell=(8, 8),
+                                             cells_per_block=(2, 2), block_norm='L2-Hys', visualize=True)
         HOG_features = feature_descrip
-        #hog_image.append(image)
+        # hog_image.append(image)
 
         return HOG_features
 
@@ -70,31 +73,41 @@ class Task1:
         cov_mat = np.cov(fv_meaned, rowvar=False)
 
         eigen_values, eigen_vectors = np.linalg.eigh(cov_mat)
-        
-        #sorting eigen values in descending order
+
+        # sorting eigen values in descending order
         sorted_index = np.argsort(eigen_values)[::-1]
 
         sorted_eigenvalue = eigen_values[sorted_index]
-        sorted_eigenvectors = eigen_vectors[:,sorted_index]
+        sorted_eigenvectors = eigen_vectors[:, sorted_index]
 
-        latent_ev = sorted_eigenvectors[:,0:k]
-        X_reduced = np.dot(latent_ev.transpose(),fv_meaned.transpose()).transpose()
+        latent_ev = sorted_eigenvectors[:, 0:k]
+        X_reduced = np.dot(latent_ev.transpose(), fv_meaned.transpose()).transpose()
 
         return X_reduced
 
     def SVD(self, feature_vector, k):
         U, s, V_t = svd(feature_vector)
-        
-        #creating mxn sigma matrix
+
+        # creating mxn sigma matrix
         Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
 
-        #populating sigma with nxn diagonal matrix
-        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)  
+        # populating sigma with nxn diagonal matrix
+        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)
 
         k_latent = k
         Sigma = Sigma[:, :k_latent]
         V_t = V_t[:k_latent, :]
-        transformed_matrix = U.dot(Sigma)
+        transformed_matrix = (U.dot(Sigma)).dot(V_t)
+
+        Sigma_inv = inv(Sigma)
+
+        latent_dict = dict()
+        latent_dict['U'] = U
+        latent_dict['Sigma_Inv'] = Sigma_inv
+        latent_dict['Vt'] = V_t
+
+        with open('data_fv.json', 'w') as fp:
+            json.dump(latent_dict, fp, indent=4)
 
         return transformed_matrix
 
@@ -140,40 +153,3 @@ class Task1:
             latent_semantic = self.LDA(feature_vector, k)
 
         return latent_semantic
-
-if __name__ == "__main__":
-    #parser = argparse.ArgumentParser()
-    feature_model = str(input('Choose the feature model: '))
-    image_type = str(input('Choose image type: '))
-    k_value = int(input('Enter the value of k: '))
-    reduction_method = str(input('Choose the dimensionality reduction technique: '))
-
-    subject_weight_matrix = []
-
-    y = 0
-    while(y<40):
-        output_dict = dict.fromkeys(['Subject', 'Weight'])
-        image_data = []
-        y+=1
-        for i in range(1, 9):
-            image_label = 'image-' + image_type + '-' + str(y) + '-' + str(i) + '.png' 
-            image_data.append(image.imread('all/' + image_label))
-        # fv = Task1().features(feature_model, image_data)
-        fv = CommonMethods().features(feature_model, image_data)
-
-        # ls = Task1().dimension_red(reduction_method, fv, k_value)
-        ls = CommonMethods().dimension_red(reduction_method, fv, k_value)
-        output_dict['Subject'] = y
-        output_dict['Weight'] = ls.tolist()
-        subject_weight_matrix.append(output_dict)
-
-    with open('data.json', 'w') as fp:
-        for dictionary in subject_weight_matrix:
-            json.dump(dictionary, fp, indent=4)
-
-    # parser.add_argument('--model', type=str, required=True)
-    # parser.add_argument('--x', type=str, required=True)
-    # parser.add_argument('--k', type=int, required=True)
-    # parser.add_argument('--dimensionality_reduction_technique', type=str, required=True)
-
-    #args = parser.parse_args()

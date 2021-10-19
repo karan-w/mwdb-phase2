@@ -8,10 +8,12 @@ from sklearn.datasets import fetch_olivetti_faces
 from scipy.linalg import svd
 from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
-from gensim.models import LdaModel
+# from gensim.models import LdaModel
 import json
 from scipy.spatial import distance
 from sklearn import preprocessing
+# from Submission.Code.tasks.CommonMethods import CommonMethods
+
 
 class Task4:
     def __init__(self):

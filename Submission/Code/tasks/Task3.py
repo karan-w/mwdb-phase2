@@ -6,7 +6,7 @@ from PIL import Image
 from scipy.spatial import distance
 import matplotlib.image as img
 import numpy as np
-import Task1
+from Submission.Code.tasks.Task1 import Task1
 from timeit import default_timer as timer
 from datetime import timedelta
 from sklearn import preprocessing
@@ -27,7 +27,7 @@ if __name__=="__main__":
     with ZipFile(file_name, 'r') as ziip:
         ziip.extractall()
 
-    file_path = (base_path / "../../../all/").resolve()
+    file_path = (base_path / "all/").resolve()
     files = [f for f in listdir(file_path) if isfile(join(file_path, f))]
 
     image_data=[]
@@ -47,11 +47,11 @@ if __name__=="__main__":
         image_type = image_details[1]
         image_index = (int(image_details[2])-1)*10 + int(image_details[3])-1
         image_data=[img.imread("all/"+file)]
-        fv = Task1.Task1().features(feature_model, image_data)
+        fv = Task1().features(feature_model, image_data)
         if fv_size==0:
             fv_size = np.shape(fv.flatten())
         type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
-    
+
     z = np.zeros(fv_size)
     for i in range(len(type_feature_mat)):
         for j in range(len(type_feature_mat[0])):
@@ -76,7 +76,7 @@ if __name__=="__main__":
             type_type_sim[i][j] = 1 - (type_type_mat[i][j]/max_value)
     # print(type_type_sim)
 
-    dr = Task1.Task1().dimension_red(reduction_method,type_type_sim,k_value)
+    dr = Task1().dimension_red(reduction_method,type_type_sim,k_value)
     print(dr)
     end = timer()
     print(timedelta(seconds=end-start))
