@@ -107,7 +107,9 @@ class Task1:
             for i in imageData:
                 feature_vector = self.ELBP(i)
                 data_matrix.append(feature_vector)
+
             data_matrix = np.mean(data_matrix, axis=0)
+            print(np.shape(data_matrix))
 
         elif feature_model == 'HOG':
             for i in imageData:
@@ -132,7 +134,6 @@ class Task1:
 
 if __name__ == "__main__":
     #parser = argparse.ArgumentParser()
-
     feature_model = str(input('Choose the feature model: '))
     image_type = str(input('Choose image type: '))
     k_value = int(input('Enter the value of k: '))
@@ -145,9 +146,9 @@ if __name__ == "__main__":
         output_dict = dict.fromkeys(['Subject', 'Weight'])
         image_data = []
         y+=1
-        for i in range(1, 11):
+        for i in range(1, 9):
             image_label = 'image-' + image_type + '-' + str(y) + '-' + str(i) + '.png' 
-            image_data.append(image.imread('/Users/harshilgandhi/Downloads/all/' + image_label))
+            image_data.append(image.imread('all/' + image_label))
         fv = Task1().features(feature_model, image_data)
         ls = Task1().dimension_red(reduction_method, fv, k_value)
         output_dict['Subject'] = y
