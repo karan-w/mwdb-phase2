@@ -26,6 +26,7 @@ from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
 from utils.dimensionality_reduction.svd import SingularValueDecomposition
 from utils.dimensionality_reduction.lda import LatentDirichletAllocation
 from utils.dimensionality_reduction.kmeans import KMeans
+from utils.subject import Subject
 
 COLOR_MOMENTS = 'CM'
 EXTENDED_LBP = 'ELBP'
@@ -87,6 +88,22 @@ class Task1:
         else:
             raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
+    def assign_images_to_subjects(self, images):
+        subjects = []
+
+        for index in range(0, 400, 10):
+            subject = Subject(images[index:index+10])
+            subjects.append(subject)
+
+        return subjects
+
+    def compute_subject_weight_matrix(self, subjects):
+        return
+
+    # I/O save
+    def save_subject_weight_matrix(self, subject_weight_matrix):
+        return
+
 if __name__ == "__main__":
     task = Task1()
     parser = task.setup_args_parser()
@@ -99,7 +116,15 @@ if __name__ == "__main__":
     images = image_reader.get_images(args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)
+    
     images = task.reduce_dimensions(args.dimensionality_reduction_technique, images, args.k)
+
+    subjects = task.assign_images_to_subjects(images)
+
+    # subject_weight_matrix = task.compute_subject_weight_matrix(subjects)
+
+    # for image in images:
+    #     print(image.reduced_feature_vector)
 
     # subject_weight_matrix = []
     # y = 0
