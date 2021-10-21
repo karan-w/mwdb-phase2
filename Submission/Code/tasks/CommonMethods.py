@@ -86,8 +86,8 @@ class CommonMethods:
         return X_reduced
 
     def SVD(self, feature_vector, k):
-        U, s, V_t = svd(feature_vector)
 
+        U, s, V_t = svd(feature_vector)
         # creating mxn sigma matrix
         Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
 
@@ -97,18 +97,33 @@ class CommonMethods:
         k_latent = k
         Sigma = Sigma[:, :k_latent]
         V_t = V_t[:k_latent, :]
+
+        print(np.shape(U))
+        print(np.shape(s))
+        print(np.shape(V_t))
+        print(np.shape(Sigma))
+        # print(U)
+        # print(V_t)
+        # print("s \n",s)
+
+
+        s = np.diag(s)
+
+        # print("s \n", s)
+        # print(Sigma)
+
         transformed_matrix = (U.dot(Sigma)).dot(V_t)
 
-        Sigma_inv = inv(Sigma)
+        # Sigma_inv = inv(Sigma)
+        s = inv(s)
 
         latent_dict = dict()
-        latent_dict['U'] = U
-        latent_dict['Sigma_Inv'] = Sigma_inv
-        latent_dict['Vt'] = V_t
+        latent_dict['U'] = U.tolist()
+        latent_dict['Sigma_Inv'] = s.tolist()
+        latent_dict['Vt'] = V_t.tolist()
 
         with open('data_fv.json', 'w') as fp:
             json.dump(latent_dict, fp, indent=4)
-
         return transformed_matrix
 
     def LDA(self, feature_vector, k):
@@ -143,6 +158,8 @@ class CommonMethods:
         return data_matrix
 
     def dimension_red(self, technique, feature_vector, k):
+
+        latent_semantic=None
         if technique == 'PCA':
             latent_semantic = self.PCA(feature_vector, k)
 

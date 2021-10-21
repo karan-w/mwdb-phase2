@@ -17,16 +17,28 @@ if __name__=="__main__":
     base_path = Path(__file__).parent
     feature_model = "HOG"
     file_name = "image-cc-1-1.png"
-
     file_path = (base_path / "all/").resolve()
 
     with open('data_fv.json') as json_file:
         data = json.load(json_file)
-
     image_data = [img.imread("test_image/"+file_name)]
-
     fv = Task1().features(feature_model, image_data)
+    qc = np.matmul((np.matmul(fv,data["U"])),data["Sigma_Inv"])
 
-    qc = np.matmul((np.matmul(fv,data["Q"])),data["Sigma_Inv"])
+    v = np.array(data["Vt"])
 
-    print(np.matmul(qc,data["Vt"]))
+    v = np.transpose(v)
+
+    print(qc.shape)
+    print(v.shape)
+
+    print(np.matmul(qc,v))
+
+
+
+
+
+
+
+
+

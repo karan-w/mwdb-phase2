@@ -26,7 +26,7 @@ class Task1:
 
         lower_index = 0
         upper_index = 8
-        
+
         while(lower_index != 64 and upper_index != 72):
             for j in range(0, 8):
                 for k in range(lower_index, upper_index):
@@ -52,7 +52,6 @@ class Task1:
         #input_image = image_df['image_values'][i].reshape(64, 64)
         ELBP_features = feature.local_binary_pattern(input_image, P=8, R=1, method="ror") #"ror" method is for extension of default 
                                                                                             #implementation which is rotation invariant.
-        
         return ELBP_features
 
     def HOG(self, input_image):
@@ -65,7 +64,6 @@ class Task1:
         return HOG_features
 
     def PCA(self, feature_vector, k):
-
         fv_meaned = feature_vector - np.mean(feature_vector, axis=0)
         cov_mat = np.cov(fv_meaned, rowvar=False)
 
@@ -147,7 +145,6 @@ if __name__ == "__main__":
     image_type = str(input('Choose image type: '))
     k_value = int(input('Enter the value of k: '))
     reduction_method = str(input('Choose the dimensionality reduction technique: '))
-
     subject_weight_matrix = []
 
     y = 0
@@ -158,11 +155,11 @@ if __name__ == "__main__":
         for i in range(1, 9):
             image_label = 'image-' + image_type + '-' + str(y) + '-' + str(i) + '.png' 
             image_data.append(image.imread('all/' + image_label))
-        # fv = Task1().features(feature_model, image_data)
-        fv = CommonMethods().features(feature_model, image_data)
+        fv = Task1().features(feature_model, image_data)
+        # fv = CommonMethods().features(feature_model, image_data)
 
-        # ls = Task1().dimension_red(reduction_method, fv, k_value)
-        ls = CommonMethods().dimension_red(reduction_method, fv, k_value)
+        ls = Task1().dimension_red(reduction_method, fv, k_value)
+        # ls = CommonMethods().dimension_red(reduction_method, fv, k_value)
         output_dict['Subject'] = y
         output_dict['Weight'] = ls.tolist()
         subject_weight_matrix.append(output_dict)

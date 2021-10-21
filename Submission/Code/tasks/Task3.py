@@ -12,7 +12,6 @@ from datetime import timedelta
 from sklearn import preprocessing
 
 
-
 if __name__=="__main__":
     type_dict={"cc":0, "con":1, "emboss":2, "jitter":3, "neg":4, "noise01":5, "noise02":6, "original":7, "poster":8, "rot":9, "smooth":10, "stipple":11}
 
@@ -59,8 +58,6 @@ if __name__=="__main__":
                 type_feature_mat[i][j] = [z]
     
     type_feature_mat_t = np.transpose(type_feature_mat)
-    
-
 
     type_type_mat = [ [0 for x in range(len(type_dict))]for y in range(len(type_dict))]
     type_type_sim = type_type_mat
@@ -80,4 +77,3 @@ if __name__=="__main__":
     print(dr)
     end = timer()
     print(timedelta(seconds=end-start))
-
