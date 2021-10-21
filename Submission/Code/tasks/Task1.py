@@ -11,6 +11,10 @@ from sklearn.decomposition import LatentDirichletAllocation
 # from gensim.models import LdaModel
 import json
 from Submission.Code.tasks.CommonMethods import CommonMethods
+import argparse
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
 
 class Task1:
     def __init__(self):
@@ -106,7 +110,10 @@ class Task1:
         data_matrix = []
         if feature_model == 'CM':
             for i in imageData:
-                feature_vector = self.color_moments(i)
+                feature_vector = self.color_moments(i) # 1 * 3 * 8 * 8 (8 * 8 + 8 * 8 + 8 * 8) 
+                feature_vector = np.squeeze(feature_vector) # Reshapes the matrix to 3 * 8 * 8 
+                feature_vector = np.transpose(feature_vector) # 8 * 8 * 3 
+                feature_vector = color.rgb2gray(feature_vector) # 8 * 8 - only one CM is retained, other two discarded
                 data_matrix.append(feature_vector)
             data_matrix = np.mean(data_matrix, axis=0)
 
@@ -127,6 +134,13 @@ class Task1:
 
         return data_matrix
 
+    def kmeans(self, feature_vector, k):
+        k_means = KMeans(n_clusters=k)
+        print(feature_vector)
+        k_means.fit(feature_vector)
+        print(k_means.cluster_centers_)
+
+
     def dimension_red(self, technique, feature_vector, k):
         if technique == 'PCA':
             latent_semantic = self.PCA(feature_vector, k)
@@ -136,15 +150,33 @@ class Task1:
 
         elif technique == 'LDA':
             latent_semantic = self.LDA(feature_vector, k)
+        
+        elif technique == 'kmeans':
+            latent_semantic = self.kmeans(feature_vector, k)
 
         return latent_semantic
 
+    # def kmeans(self, )
+
 if __name__ == "__main__":
-    #parser = argparse.ArgumentParser()
-    feature_model = str(input('Choose the feature model: '))
-    image_type = str(input('Choose image type: '))
-    k_value = int(input('Enter the value of k: '))
-    reduction_method = str(input('Choose the dimensionality reduction technique: '))
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--model', type=str, required=True)
+    parser.add_argument('--x', type=str, required=True)
+    parser.add_argument('--k', type=int, required=True)
+    parser.add_argument('--dimensionality_reduction_technique', type=str, required=True)
+    parser.add_argument('--images_folder', type=str, required=True)
+    parser.add_argument('--output_folder', type=str, required=True)
+
+    args = parser.parse_args()
+
+    feature_model = args.model
+    image_type = args.x
+    k_value = args.k
+    reduction_method = args.dimensionality_reduction_technique
+    images_folder = args.images_folder
+    output_folder = args.output_folder
+
     subject_weight_matrix = []
 
     y = 0
@@ -154,7 +186,7 @@ if __name__ == "__main__":
         y+=1
         for i in range(1, 9):
             image_label = 'image-' + image_type + '-' + str(y) + '-' + str(i) + '.png' 
-            image_data.append(image.imread('all/' + image_label))
+            image_data.append(image.imread(os.path.join(images_folder, image_label)))
         fv = Task1().features(feature_model, image_data)
         # fv = CommonMethods().features(feature_model, image_data)
 
@@ -164,13 +196,12 @@ if __name__ == "__main__":
         output_dict['Weight'] = ls.tolist()
         subject_weight_matrix.append(output_dict)
 
-    with open('data.json', 'w') as fp:
+    output_json = os.path.join(output_folder, 'data.json') # Create folder with timestamp and store in that
+
+    with open(output_json, 'w') as fp:
         for dictionary in subject_weight_matrix:
             json.dump(dictionary, fp, indent=4)
 
-    # parser.add_argument('--model', type=str, required=True)
-    # parser.add_argument('--x', type=str, required=True)
-    # parser.add_argument('--k', type=int, required=True)
-    # parser.add_argument('--dimensionality_reduction_technique', type=str, required=True)
-
-    #args = parser.parse_args()
+# TODO: Check all dimensionality reduction techniques
+# TODO: Generalize code 
+# TODO: Create output folder with timestamp and store in that
