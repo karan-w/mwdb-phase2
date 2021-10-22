@@ -6,13 +6,18 @@ class LatentDirichletAllocation:
         pass
 
     def compute_LDA(self, dataset_feature_vector, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
+        attributes['dataset_feature_vector'] = dataset_feature_vector
         latent_dirichlet_allocation = decomposition.LatentDirichletAllocation(n_components=k)
         latent_dirichlet_allocation.fit(dataset_feature_vector)
         reduced_dataset_feature_vector = latent_dirichlet_allocation.transform(dataset_feature_vector)
-        return reduced_dataset_feature_vector # 400 * k
+        attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
+        return reduced_dataset_feature_vector, attributes # 400 * k
 
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
-        reduced_dataset_feature_vector = self.compute_LDA(dataset_feature_vector, k)
+        reduced_dataset_feature_vector, attributes = self.compute_LDA(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
-        return images
+        return images, attributes
