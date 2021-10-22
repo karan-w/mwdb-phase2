@@ -1,0 +1,36 @@
+from sklearn import cluster
+from utils.feature_vector import FeatureVector
+import numpy as np
+
+class KMeans:
+    def __init__(self) -> None:
+        pass
+
+    def compute_centroids(self, dataset_feature_vector, k):
+        kmeans = cluster.KMeans(init="k-means++", n_clusters=k)
+        kmeans.fit(dataset_feature_vector)
+        centroids = kmeans.cluster_centers_ # k * m
+        return centroids
+
+    def compute_reduced_dataset_feature_vector(self, centroids, dataset_feature_vector):
+        reduced_dataset_feature_vector = []
+        for centroid_index in range(centroids.shape[0]):
+            centroid = centroids[centroid_index,:]
+            distance_centroid = np.sum((dataset_feature_vector-centroid)**2,axis=1)
+            reduced_dataset_feature_vector.append(distance_centroid)
+
+        reduced_dataset_feature_vector = np.array(reduced_dataset_feature_vector).T
+        return reduced_dataset_feature_vector
+
+    def compute(self, images, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
+        dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+        attributes['dataset_feature_vector'] = dataset_feature_vector
+        centroids = self.compute_centroids(dataset_feature_vector, k)
+        attributes['centroids'] = centroids
+        reduced_dataset_feature_vector = self.compute_reduced_dataset_feature_vector(centroids, dataset_feature_vector)
+        attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
+        images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
+        return images, attributes
