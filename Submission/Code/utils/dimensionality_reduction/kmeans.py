@@ -23,8 +23,14 @@ class KMeans:
         return reduced_dataset_feature_vector
 
     def compute(self, images, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+        attributes['dataset_feature_vector'] = dataset_feature_vector
         centroids = self.compute_centroids(dataset_feature_vector, k)
+        attributes['centroids'] = centroids
         reduced_dataset_feature_vector = self.compute_reduced_dataset_feature_vector(centroids, dataset_feature_vector)
+        attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
-        return images
+        return images, attributes
