@@ -10,7 +10,7 @@ from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
 # from gensim.models import LdaModel
 import json
-from Submission.Code.tasks.CommonMethods import CommonMethods
+from tasks.CommonMethods import CommonMethods
 import argparse
 import pandas as pd
 import numpy as np
@@ -88,7 +88,13 @@ class Task1:
         U, s, V_t = svd(feature_vector)
         
         #creating mxn sigma matrix
-        Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
+
+        # Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
+
+        fv_shape = np.shape(feature_vector)
+        print("fv shape ",fv_shape[0])
+        Sigma = np.zeros(fv_shape[0], fv_shape[1])
+        # Sigma = np.zeros((np.shape(feature_vector))[0], (np.shape(feature_vector))[1])
 
         #populating sigma with nxn diagonal matrix
         Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)  
@@ -159,8 +165,8 @@ class Task1:
     # def kmeans(self, )
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
 
+    parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--x', type=str, required=True)
     parser.add_argument('--k', type=int, required=True)

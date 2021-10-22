@@ -30,7 +30,8 @@ class ImageReader:
     def get_subject_images(self, folder_path, image_type, subject_id):
         logger.info(f"Reading images for subject {subject_id}")
         subject_images = []
-        for image_id in range(1, 11):
+        # for image_id in range(1, 11):
+        for image_id in range(1, 10):
             image = self.get_image(folder_path, image_type, subject_id, image_id)
             subject_images.append(image)
         return subject_images
@@ -43,6 +44,3 @@ class ImageReader:
             for subject_image in subject_images:
                 images.append(subject_image)
         return images
-
-
-

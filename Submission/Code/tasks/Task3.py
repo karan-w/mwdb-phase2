@@ -6,7 +6,7 @@ from PIL import Image
 from scipy.spatial import distance
 import matplotlib.image as img
 import numpy as np
-from Submission.Code.tasks.Task1 import Task1
+from tasks.Task1 import Task1
 from timeit import default_timer as timer
 from datetime import timedelta
 from sklearn import preprocessing
@@ -37,8 +37,8 @@ if __name__=="__main__":
 
     for i in range(13):
         type_matrix.append([])
-        
 
+    print(np.shape(type_feature_mat))
     start = timer()
     fv_size = 0
     for file in files:
@@ -51,29 +51,62 @@ if __name__=="__main__":
             fv_size = np.shape(fv.flatten())
         type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
 
-    z = np.zeros(fv_size)
+    print(np.shape(type_feature_mat[2]))
+    z = np.zeros(fv_size, dtype=object)
     for i in range(len(type_feature_mat)):
         for j in range(len(type_feature_mat[0])):
-            if np.shape(type_feature_mat[i][j])==(0,):
-                type_feature_mat[i][j] = [z]
-    
-    type_feature_mat_t = np.transpose(type_feature_mat)
+            if np.shape(type_feature_mat[i][j]) == (0,):
+                type_feature_mat[i][j] = z
+    #
+    # =================================START=====================================
 
-    type_type_mat = [ [0 for x in range(len(type_dict))]for y in range(len(type_dict))]
-    type_type_sim = type_type_mat
-    max_val = 0
+    type_type_mat = [[0 for x in range(len(type_dict))] for y in range(len(type_dict))]
+
+
+
     for i in range(len(type_feature_mat)):
-        for j in range(len(type_feature_mat_t[0])):
-            for k in range(len(type_feature_mat_t)):
-                type_type_mat[i][j] += distance.cityblock(type_feature_mat[i][k], type_feature_mat_t[k][j])
-    max_value = max(max(type_type_mat, key=max))
-    
-    for i in range(len(type_dict)):
-        for j in range(len(type_dict)):
-            type_type_sim[i][j] = 1 - (type_type_mat[i][j]/max_value)
-    # print(type_type_sim)
+        for j in range(len(type_feature_mat)):
+            print(np.shape(type_feature_mat[i][j]))
+            if np.shape(type_feature_mat[i][j])==(1,1764):
+                print(type_feature_mat[i][j])
+            print(np.shape(np.concatenate(type_feature_mat[i]).flat))
+            type_type_mat[i][j] = distance.cityblock(np.concatenate(type_feature_mat[i]).flat,np.concatenate(type_feature_mat[j]).flat)
 
-    dr = Task1().dimension_red(reduction_method,type_type_sim,k_value)
-    print(dr)
+
+    print(type_type_mat)
+
+    max_value = max(max(type_type_mat, key=max))
+
+    for i in range(len(type_dict)):
+        type_type_mat[i] = np.array(type_type_mat[i],dtype=float)
+        for j in range(len(type_dict)):
+            type_type_mat[i][j] = 1 - (type_type_mat[i][j] / max_value)
+    print(type_type_mat)
+
+    dr = Task1().dimension_red(reduction_method, type_type_mat, k_value)
+    print("dr \n",dr)
+        # =================================END=====================================
+        #
+
+
+    # type_feature_mat_t = np.transpose(type_feature_mat)
+    #
+    # type_type_mat = [ [0 for x in range(len(type_dict))]for y in range(len(type_dict))]
+    # type_type_sim = type_type_mat
+    # max_val = 0
+    # for i in range(len(type_feature_mat)):
+    #     for j in range(len(type_feature_mat_t[0])):
+    #         for k in range(len(type_feature_mat_t)):
+    #             type_type_mat[i][j] += distance.cityblock(type_feature_mat[i][k], type_feature_mat_t[k][j])
+
+    # max_value = max(max(type_type_mat, key=max))
+    #
+    # for i in range(len(type_dict)):
+    #     for j in range(len(type_dict)):
+    #         type_type_sim[i][j] = 1 - (type_type_mat[i][j]/max_value)
+    # # print(type_type_sim)
+    #
+    # dr = Task1().dimension_red(reduction_method,type_type_sim,k_value)
+    # print(dr)
     end = timer()
     print(timedelta(seconds=end-start))

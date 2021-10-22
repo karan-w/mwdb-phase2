@@ -143,9 +143,9 @@ class Task4:
 if __name__ == "__main__":
     #parser = argparse.ArgumentParser()
 
-    feature_model = 'ELBP'#str(input('Choose the feature model: '))
+    feature_model = 'HOG'#str(input('Choose the feature model: '))
     k_value = 10#int(input('Enter the value of k: '))
-    reduction_method = 'PCA'#str(input('Choose the dimensionality reduction technique: '))
+    reduction_method = 'SVD'#str(input('Choose the dimensionality reduction technique: '))
 
     #detail images not present
     image_types = ['cc', 'con', 'emboss', 'jitter', 'neg', 'noise01', 'noise02', 'original', 'poster', 'rot', 'smooth', 'stipple']
