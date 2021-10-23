@@ -20,6 +20,10 @@ class LatentDirichletAllocation:
         subjects_latent_semantics, attributes = self.compute_LDA(subjects_similarity_matrix, k)
         return subjects_latent_semantics, attributes
 
+    def compute_type_LDA(self, types_similarity_matrix, k):
+        types_latent_semantics, attributes = self.compute_LDA(types_similarity_matrix, k)
+        return types_latent_semantics, attributes
+
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
         reduced_dataset_feature_vector, attributes = self.compute_LDA(dataset_feature_vector, k)

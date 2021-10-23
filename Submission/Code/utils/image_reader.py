@@ -33,13 +33,13 @@ class ImageReader:
         logger.debug(image.__str__())
         return image
 
-    def get_subject_images(self, folder_path, image_type, subject_id, number_of_images):
-        logger.info(f"Reading images for subject {subject_id}")
-        subject_images = []
-        for image_id in range(1, 1 + number_of_images):
-            image = self.get_image(folder_path, image_type, subject_id, image_id)
-            subject_images.append(image)
-        return subject_images
+    # def get_subject_images(self, folder_path, image_type, subject_id, number_of_images):
+    #     logger.info(f"Reading images for subject {subject_id}")
+    #     subject_images = []
+    #     for image_id in range(1, 1 + number_of_images):
+    #         image = self.get_image(folder_path, image_type, subject_id, image_id)
+    #         subject_images.append(image)
+    #     return subject_images
 
     def parse_image_filename(self, image_filename):
         tokens = image_filename.split('-')
@@ -63,7 +63,7 @@ class ImageReader:
         return images 
 
     def get_images_by_type(self, folder_path, subject_id):
-        logger.info("Reading images for all the subjects.")
+        logger.info("Reading images for all the types.")
         image_filenames = self.get_all_image_filenames_for_one_subject(folder_path, subject_id)
         images = []
 
@@ -76,9 +76,28 @@ class ImageReader:
 
         return images 
 
-    def get_images_for_subjects(self, folder_path):
-        logger.info("Reading all images for all the subjects.")
-        image_filenames = self.get_all_image_filenames_by_subjects(folder_path)
+    # def get_images_for_subjects(self, folder_path):
+    #     logger.info("Reading all images for all the subjects.")
+    #     image_filenames = self.get_all_image_filenames_by_subjects(folder_path)
+    #     images = []
+
+    #     for image_filename in image_filenames:
+    #         image_type, subject_id, image_id = self.parse_image_filename(image_filename)
+    #         image = self.get_image(folder_path, image_type, subject_id, image_id)
+    #         images.append(image)
+
+    #     # TODO: Sort images by subject_id and image_id
+
+    #     return images 
+    # def get_all_image_filenames(self, folder_path):
+    #     image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex, image_filename)]
+    #     for image_filename in image_filenames:
+    #         print(image_filename)
+    #     return
+    
+    def get_all_images_in_folder(self, folder_path):
+        logger.info("Reading all the images in the folder.")
+        image_filenames = self.get_all_images_filenames_in_folder(folder_path)
         images = []
 
         for image_filename in image_filenames:
@@ -89,11 +108,6 @@ class ImageReader:
         # TODO: Sort images by subject_id and image_id
 
         return images 
-    # def get_all_image_filenames(self, folder_path):
-    #     image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex, image_filename)]
-    #     for image_filename in image_filenames:
-    #         print(image_filename)
-    #     return
     
     def get_all_image_filenames_for_one_type(self, folder_path, image_type):
         self.image_filename_regex_image_type = f'image-{image_type}-\d*-\d*.png'
@@ -107,9 +121,10 @@ class ImageReader:
         image_filenames = sorted(image_filenames)
         return image_filenames
 
-    #this is for task 4 where we need to get all images for every subject
-    def get_all_image_filenames_by_subjects(self, folder_path):
+    #this is for task 3 and 4 where we need to get all images for every type and every subject respectively
+    def get_all_images_filenames_in_folder(self, folder_path):
         image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex, image_filename)]
         image_filenames = sorted(image_filenames)
         return image_filenames
+
 # relation between images and  subjects

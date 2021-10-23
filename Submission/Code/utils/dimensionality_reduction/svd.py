@@ -31,6 +31,10 @@ class SingularValueDecomposition:
         subjects_latent_semantics, attributes = self.compute_SVD(subjects_similarity_matrix, k)
         return subjects_latent_semantics, attributes
 
+    def compute_type_SVD(self, types_similarity_matrix, k):
+        types_latent_semantics, attributes = self.compute_SVD(types_similarity_matrix, k)
+        return types_latent_semantics, attributes
+
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
         reduced_dataset_feature_vector, attributes = self.compute_SVD(dataset_feature_vector, k)
