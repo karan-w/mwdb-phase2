@@ -1,161 +1,213 @@
+import sys
 import numpy as np
-from skimage import feature
-from matplotlib import image
-from sklearn.decomposition import LatentDirichletAllocation
-from glob import glob
-import pandas as pd
-import scipy
+
+sys.path.append(".")
+
 import os
-from scipy.linalg import svd
+
+import logging
+import argparse
+
+from utils.image_reader import ImageReader
+from utils.feature_models.cm import ColorMoments
+from utils.feature_models.elbp import ExtendedLocalBinaryPattern
+from utils.feature_models.hog import HistogramOfGradients
+from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
+from utils.dimensionality_reduction.svd import SingularValueDecomposition
+from utils.dimensionality_reduction.lda import LatentDirichletAllocation
+from utils.dimensionality_reduction.kmeans import KMeans
+from utils.subject import Subject
+from utils.feature_vector import FeatureVector
+from utils.output import Output
+
+COLOR_MOMENTS = 'CM'
+EXTENDED_LBP = 'ELBP'
+HISTOGRAM_OF_GRADIENTS = 'HOG'
+
+PRINCIPAL_COMPONENT_ANALYSIS = 'PCA'
+SINGULAR_VALUE_DECOMPOSITION = 'SVD'
+LATENT_DIRICHLET_ALLOCATION = 'LDA'
+KMEANS = 'kmeans'
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
 
 class Task2:
     def __init__(self):
         pass
 
-    def color_moments(self, X):
-        moment_m = []
-        moment_v = []
-        moment_s = []
+    def setup_args_parser(self):
+        parser = argparse.ArgumentParser()
 
-        # Looping through the 64x64 image to calculate moments for 8x8 blocks
-        for i in range(0, len(X), 8):
-            for j in range(0, len(X), 8):
-                block = X[i:i + 8, j:j + 8]
-                moment_m.append(np.mean(block))
-                moment_v.append(np.var(block))
-                moment_s.append(scipy.stats.skew(block, axis=None))
-
-        # Combining moments to make a (3, 8, 8) size feature vector
-        moment = [moment_m, moment_v, moment_s]
-        moment = np.array(moment)
-        return moment.reshape(3*8*8)
-
-    def ELBP(self, X):
-        radius = 2
-        n_points = 4 * radius
-        lbp = feature.local_binary_pattern(X, n_points, radius, method="ror")
-        (hist, _) = np.histogram(lbp.ravel(),
-                                 bins=np.arange(0, n_points + 3),
-                                 range=(0, n_points + 2))
-        hist.astype("float")
-        hist = hist / hist.sum()
-        return hist
-
-    def HOG(self, X):
-        out, hog = feature.hog(X, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2), block_norm='L2-Hys', visualize=True)
-        return out
-
-    def PCA(self, feature_vector, k):
-        fv_meaned = feature_vector - np.mean(feature_vector, axis=0)
-        cov_mat = np.cov(fv_meaned, rowvar=False)
-        eigen_values, eigen_vectors = np.linalg.eigh(cov_mat)
+        parser.add_argument('--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS], required=True)
+        parser.add_argument('--x', type=str, required=True)
+        parser.add_argument('--k', type=int, required=True)
+        parser.add_argument('--dimensionality_reduction_technique', type=str, choices=[PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION, LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
+        parser.add_argument('--images_folder_path', type=str, required=True)
+        parser.add_argument('--output_folder_path', type=str, required=True)
         
-        #sorting eigen values in descending order
-        sorted_index = np.argsort(eigen_values)[::-1]
+        return parser
 
-        sorted_eigenvalue = eigen_values[sorted_index]
-        sorted_eigenvectors = eigen_vectors[:, sorted_index]
+    def log_args(self, args):
+        logger.debug("Received the following arguments.")
+        logger.debug(f'model - {args.model}')
+        logger.debug(f'x - {args.x}')
+        logger.debug(f'k - {args.k}')
+        logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
+        logger.debug(f'images_folder_path - {args.images_folder_path}')
+        logger.debug(f'output_folder_path - {args.output_folder_path}')
 
-        latent_ev = sorted_eigenvectors[:, 0:k]
-        X_reduced = np.dot(latent_ev.transpose(), fv_meaned.transpose()).transpose()
+    def compute_feature_vectors(self, feature_model, images):
+        if feature_model == COLOR_MOMENTS:
+            return ColorMoments().compute(images)
+        elif feature_model == EXTENDED_LBP:
+            return ExtendedLocalBinaryPattern().compute(images)
+        elif feature_model == HISTOGRAM_OF_GRADIENTS:
+            return HistogramOfGradients().compute(images)
+        else:
+            raise Exception(f"Unknown feature model - {feature_model}")
 
-        return X_reduced
+    def reduce_dimensions(self, dimensionality_reduction_technique, images, k):
+        if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
+            return PrincipalComponentAnalysis().compute(images, k)
+        elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
+            return SingularValueDecomposition().compute(images, k)
+        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
+            return LatentDirichletAllocation().compute(images, k)
+        elif dimensionality_reduction_technique == KMEANS:
+            return KMeans().compute(images, k)
+        else:
+            raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
-    def SVD(self, feature_vector, k):
-        U, s, V_t = svd(feature_vector)
+    def get_distinct_image_types(self, images):
+        distinct_image_types = set()
+        for image in images:
+            distinct_image_types.add(image.image_type)
+        return sorted(list(distinct_image_types))
+    
+    def assign_images_to_types(self, images):
+        # Find distinct subject_ids in all the images
+        image_types = self.get_distinct_image_types(images)
 
-        #creating mxn sigma matrix
-        Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
+        types = []
 
-        #populating sigma with nxn diagonal matrix
-        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)
+        # Group images for each distinct subject_id 
+        for image_type in image_types:
+            type_images = []
+            for image in images:
+                if(image.image_type == image_type):
+                    type_images.append(image)
+            type = Subject(type_images)
+            type.create_type_feature_vector(type.images)
+            type.create_reduced_type_feature_vector(type.images)
+            types.append(type)
 
-        k_latent = k
-        Sigma = Sigma[:, :k_latent]
-        V_t = V_t[:k_latent, :]
-        transformed_matrix = U.dot(Sigma)
+        # Return all the distinct subjects as a list
+        return types
 
-        return transformed_matrix
+    def compute_type_weight_matrix(self, types):
+        return FeatureVector().create_types_reduced_feature_vector(types)
 
-    def LDA(self, feature_vector, k):
-        lda_modal = LatentDirichletAllocation(n_components=k)
-        lda_modal.fit(feature_vector)
-        lda = lda_modal.transform(feature_vector)
-        return lda
+    def preprocess_drt_attributes_for_output(self, dimensionality_reduction_technique, drt_attributes):
+        if(dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS):
+            # dataset_feature_vector, standardized_dataset_feature_vector, eigen_values, eigen_vectors, k_principal_components_eigen_vectors
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
+            drt_attributes['standardized_dataset_feature_vector'] = drt_attributes['standardized_dataset_feature_vector'].real.tolist()
+            drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
+            drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
+            drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes['k_principal_components_eigen_vectors'].real.tolist()
+            drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
+        
+        elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
+            # TODO: Complete after SVD implementation
+            # print(drt_attributes.keys())
+            pass
+        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION: 
+            # dataset_feature_vector, reduced_dataset_feature_vector
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
 
-    def features(self, feature_model, imageData):
-        feature_vector = None
-        if feature_model == 'CM':
-            feature_vector = self.color_moments(imageData)
+        elif dimensionality_reduction_technique == KMEANS: 
+            # dataset_feature_vector, centroids, reduced_dataset_feature_vector
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            drt_attributes['centroids'] = drt_attributes['centroids'].tolist()
+            drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
+        
+        return drt_attributes
 
-        elif feature_model == 'ELBP':
-            feature_vector = self.ELBP(i)
+    def build_output(self, args, images, drt_attributes, types, type_weight_matrix):
+        # 1. Preprocess all variables/objects so they can be serialized
+        for image in images:
+            image.matrix = None
+            image.reduced_feature_vector = image.reduced_feature_vector.real.tolist()
 
-        elif feature_model == 'HOG':
-            feature_vector = self.HOG(imageData)
+        for type in types:
+            type.images = None
+            type.feature_vector = type.feature_vector.real.tolist()
+            type.reduced_feature_vector = type.reduced_feature_vector.real.tolist()
 
-        return feature_vector
+        drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique, drt_attributes)
 
-    def dimension_red(self, technique, feature_vector, k):
-        if technique == 'PCA':
-            latent_semantic = self.PCA(feature_vector, k)
+        type_weight_matrix = type_weight_matrix.real.tolist()
 
-        elif technique == 'SVD':
-            latent_semantic = self.SVD(feature_vector, k)
+        sorted_type_weight_matrix = []
+        for i in range(len(type_weight_matrix[0])):
+            type_weight_pairs = dict.fromkeys(['Latent Semantic', 'Types', 'Weights'])
+            types = []
+            weights = []
+            for j in range(len(type_weight_matrix)):
+                types.append(str(j))
+                weights.append(type_weight_matrix[j][i])
+            type_weight_pairs['Latent Semantic'] = i
+            type_weight_pairs['Weights'] = [x for _,x in sorted(zip(types,weights), reverse=True)]
+            type_weight_pairs['Types'] = [x for x,_ in sorted(zip(types,weights), reverse=True)]
+            sorted_type_weight_matrix.append(type_weight_pairs)
 
-        elif technique == 'LDA':
-            latent_semantic = self.LDA(feature_vector, k)
+        # 2. Prepare dictionary that should be JSONfied to store in JSON file
+        output = {
+            # args is not serializable
+            'args': {
+                'model': args.model,
+                'x': args.x,
+                'k': args.k,
+                'dimensionality_reduction_technique': args.dimensionality_reduction_technique,
+                'images_folder_path': args.images_folder_path,
+                'output_folder_path': args.output_folder_path
+            },
+            'images': images,
+            'types': types,
+            'drt_attributes': drt_attributes, 
+            'type_weight_matrix': sorted_type_weight_matrix
+        }
+        return output
 
-        return latent_semantic
-
+    def save_output(self, output, output_folder_path):
+        OUTPUT_FILE_NAME = 'output.json'
+        timestamp_folder_path = Output().create_timestamp_folder(output_folder_path) # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
+        output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
+        Output().save_dict_as_json_file(output, output_json_path)
 
 if __name__ == "__main__":
+    task = Task2()
+    parser = task.setup_args_parser()
 
-    os.chdir('C:/Users/sshah96/Desktop/ASU/CSE515/Project Phase 2/phase2_data/all/')   
+    # model, x, k, dimensionality_reduction_technique, images_folder_path, output_folder_path
+    args = parser.parse_args()
+    task.log_args(args)
 
-    feature_model = str(input('Choose the feature model: '))
-    subject_id = str(input('Choose Subject ID: '))
-    k_value = int(input('Enter the value of k: '))
-    reduction_method = str(input('Choose the dimensionality reduction technique: '))
+    image_reader = ImageReader()
+    images = image_reader.get_images_by_type(args.images_folder_path, args.x)
 
-    type_weight_matrix = []
+    images = task.compute_feature_vectors(args.model, images)
+    
+    # drt = dimensionality reduction technique
+    images, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, images, args.k)
 
-    regex = '*-' + subject_id + '-*.png'
+    types = task.assign_images_to_types(images)
 
-    files = glob(regex)
+    type_weight_matrix = task.compute_type_weight_matrix(types)
 
-    files.sort()
-
-    types_of_image = set()
-
-    for file in files:
-        start = file.find('-') + 1
-        end = file.find('-', start)
-
-        types_of_image.add(file[start:end])
-
-    types_of_image = list(types_of_image)
-    types_of_image.sort()
-    types_of_image = np.array(types_of_image)
-    types_of_image = np.reshape(types_of_image, (len(types_of_image), 1))
-
-    fv = []
-    for file in files:
-        image_data = image.imread(file)
-        fv.append(Task2().features(feature_model, image_data))
-
-    ls = Task2().dimension_red(reduction_method, fv, k_value)
-
-    type_weight_matrix = []
-    dis = int(len(ls) / (len(types_of_image)))
-    for i in range(0, len(ls), dis):
-        type_weight_matrix.append(np.mean(ls[i:i + dis], axis=0))
-
-    type_weight_matrix = np.array(type_weight_matrix)
-    types_weight_matrix = type_weight_matrix.T
-
-    latent_semantic_file = pd.DataFrame(data=np.hstack((types_of_image, type_weight_matrix)))
-    file_name = feature_model + '_' + subject_id + '_' + str(k_value) + '_' + reduction_method + '.csv'
-    latent_semantic_file.to_csv('../' + file_name, sep=',')
-
-    print(latent_semantic_file)
+    output = task.build_output(args, images, drt_attributes, types, type_weight_matrix)
+    print(output)
+    # TODO: Sorted subjects for each weight 
+    # task.save_output(output, args.output_folder_path)

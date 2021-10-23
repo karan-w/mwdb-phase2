@@ -1,3 +1,4 @@
+from re import sub
 import numpy as np
 
 class FeatureVector:
@@ -9,8 +10,9 @@ class FeatureVector:
         dataset_feature_vector = []
         for image in images:
             dataset_feature_vector.append(image.feature_vector)
-        dataset_feature_vector = np.stack(dataset_feature_vector, axis=0) # 400 x fv_size
+        dataset_feature_vector = np.stack(dataset_feature_vector, axis=0) # 400 x f v_size
         return dataset_feature_vector
+
 
     def create_subjects_feature_vector(self, subjects):
         subjects = sorted(subjects, key=lambda subject: (subject.subject_id))
@@ -20,6 +22,14 @@ class FeatureVector:
         subjects_feature_vector = np.stack(subjects_feature_vector, axis=0)
         return subjects_feature_vector
 
+    def create_types_feature_vector(self, types):
+        types = sorted(types, key=lambda subject: (subject.image_type))
+        types_feature_vector = []
+        for type in types:
+            types_feature_vector.append(type.feature_vector)
+        types_feature_vector = np.stack(type, axis=0)
+        return types_feature_vector
+
     def create_subjects_reduced_feature_vector(self, subjects):
         subjects = sorted(subjects, key=lambda subject: (subject.subject_id))
         subjects_feature_vector = []
@@ -27,6 +37,14 @@ class FeatureVector:
             subjects_feature_vector.append(subject.reduced_feature_vector)
         subjects_feature_vector = np.stack(subjects_feature_vector, axis=0)
         return subjects_feature_vector
+
+    def create_types_reduced_feature_vector(self, types):
+        types = sorted(types, key=lambda subject: (subject.image_type))
+        types_feature_vector = []
+        for type in types:
+            types_feature_vector.append(type.reduced_feature_vector)
+        types_feature_vector = np.stack(types_feature_vector, axis=0)
+        return types_feature_vector
 
     '''
     This function assumes that the images are sorted by (subject_id, and image_id) 
