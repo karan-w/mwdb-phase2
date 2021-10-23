@@ -6,6 +6,7 @@ from types import GetSetDescriptorType
 import cv2
 from .image import Image
 import matplotlib.image as img
+import re
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
@@ -15,6 +16,8 @@ This class is responsible for reading images from disk.
 
 '''
 class ImageReader:
+    image_filename_regex = r'image-[a-z]*-\d*-\d*.png'
+
     def __init__(self):
         pass
     
@@ -29,23 +32,25 @@ class ImageReader:
         logger.debug(image.__str__())
         return image
 
-    def get_subject_images(self, folder_path, image_type, subject_id):
+    def get_subject_images(self, folder_path, image_type, subject_id, number_of_images):
         logger.info(f"Reading images for subject {subject_id}")
         subject_images = []
-        # for image_id in range(1, 11):
-        for image_id in range(1, 10):
+        for image_id in range(1, 1 + number_of_images):
             image = self.get_image(folder_path, image_type, subject_id, image_id)
             subject_images.append(image)
         return subject_images
 
+    def parse_image_filename(self, image_filename):
+        tokens = image_filename.split('-')
+        image_type = tokens[1]
+        subject_id = tokens[2]
+        image_id = tokens[3][:-4] # Remove the .png
+        return image_type, subject_id, image_id
+
     def get_images(self, folder_path, image_type):
         logger.info("Reading images for all the subjects.")
+        image_filenames = self.get_all_image_filenames(folder_path, image_type)
         images = []
-        for subject_id in range(1, 41):
-            subject_images = self.get_subject_images(folder_path, image_type, subject_id)
-            for subject_image in subject_images:
-                images.append(subject_image)
-        return images
 
     def get_images2(self, folder_path):
         logger.info("Reading all images from the folder.")
@@ -64,3 +69,25 @@ class ImageReader:
             image = self.get_image(folder_path,image_type,image_subject,image_details[3])
             images.append(image)
         return images
+        for image_filename in image_filenames:
+            image_type, subject_id, image_id = self.parse_image_filename(image_filename)
+            image = self.get_image(folder_path, image_type, subject_id, image_id)
+            images.append(image)
+
+        # TODO: Sort images by subject_id and image_id
+
+        return images 
+
+    def get_all_image_filenames(self, folder_path):
+        image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex, image_filename)]
+        for image_filename in image_filenames:
+            print(image_filename)
+        return
+    
+    def get_all_image_filenames(self, folder_path, image_type):
+        self.image_filename_regex_image_type = f'image-{image_type}-\d*-\d*.png'
+        image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex_image_type, image_filename)]
+        image_filenames = sorted(image_filenames)
+        return image_filenames
+
+# relation between images and subjects
