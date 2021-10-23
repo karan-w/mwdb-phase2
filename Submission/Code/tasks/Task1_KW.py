@@ -25,6 +25,7 @@ from utils.dimensionality_reduction.svd import SingularValueDecomposition
 from utils.dimensionality_reduction.lda import LatentDirichletAllocation
 from utils.dimensionality_reduction.kmeans import KMeans
 from utils.subject import Subject
+
 COLOR_MOMENTS = 'CM'
 EXTENDED_LBP = 'ELBP'
 HISTOGRAM_OF_GRADIENTS = 'HOG'

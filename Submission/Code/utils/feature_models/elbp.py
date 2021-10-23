@@ -10,6 +10,10 @@ class ExtendedLocalBinaryPattern:
             
         return images
 
+    def compute2(self,image):
+        image.feature_vector = self.get_elbp_fd(image.matrix)
+        return image
+
     def get_elbp_fd(self, image_matrix):
         radius = 2
         n_points = 4 * radius

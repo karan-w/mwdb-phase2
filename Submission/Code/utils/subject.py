@@ -7,11 +7,13 @@ class Subject:
         
         self.subject_id = subject_images[0].subject_id
 
-        subject_images_feature_vector = np.stack([subject_image.feature_vector for subject_image in subject_images], axis=0)
-        self.feature_vector = np.mean(subject_images_feature_vector, axis=0)
-
+    def create_reduced_subject_feature_vector(self, subject_images): 
         subject_images_reduced_feature_vector = np.stack([subject_image.reduced_feature_vector for subject_image in subject_images], axis=0)
-        self.reduced_feature_vector = np.mean(subject_images_reduced_feature_vector, axis=0)
+        self.reduced_feature_vector = np.mean(subject_images_reduced_feature_vector, axis=0) # 1 * k
+
+    def create_subject_feature_vector(self, subject_images):
+        subject_images_feature_vector = np.stack([subject_image.feature_vector for subject_image in subject_images], axis=0) # Number of images * m
+        self.feature_vector = np.mean(subject_images_feature_vector, axis=0) # 1 * m
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 

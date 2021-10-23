@@ -67,3 +67,7 @@ class ColorMoments:
         
         return images
 
+    def compute2(self,image):
+        image.feature_vector = self.get_color_moments_fd(image.matrix)
+        return image
+

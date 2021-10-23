@@ -78,13 +78,31 @@ class Task1:
         else:
             raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
+    def get_distinct_subject_ids(self, images):
+        distinct_subject_ids = set()
+        for image in images:
+            distinct_subject_ids.add(image.subject_id)
+        return sorted(list(distinct_subject_ids))
+
+    # images should be a list of Image objects
     def assign_images_to_subjects(self, images):
+        # Find distinct subject_ids in all the images
+        subject_ids = self.get_distinct_subject_ids(images)
+
         subjects = []
 
-        for index in range(0, 400, 10):
-            subject = Subject(images[index:index+10])
+        # Group images for each distinct subject_id 
+        for subject_id in subject_ids:
+            subject_images = []
+            for image in images:
+                if(image.subject_id == subject_id):
+                    subject_images.append(image)
+            subject = Subject(subject_images)
+            subject.create_subject_feature_vector(subject.images)
+            subject.create_reduced_subject_feature_vector(subject.images)
             subjects.append(subject)
 
+        # Return all the distinct subjects as a list
         return subjects
 
     def compute_subject_weight_matrix(self, subjects):
@@ -165,6 +183,7 @@ if __name__ == "__main__":
     task.log_args(args)
 
     image_reader = ImageReader()
+
     images = image_reader.get_images(args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)

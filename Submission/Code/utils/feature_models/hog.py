@@ -9,7 +9,11 @@ class HistogramOfGradients:
             image.feature_vector = self.get_hog_fd(image.matrix)
         
         return images
-        
+
+    def compute2(self,image):
+        image.feature_vector = self.get_hog_fd(image.matrix)
+        return image
+
     def get_hog_fd(self, image_matrix):
         hog_feature_descriptor, hog_image = feature.hog(image_matrix, 
             orientations=9, 
