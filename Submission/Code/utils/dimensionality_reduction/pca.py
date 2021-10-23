@@ -1,3 +1,4 @@
+import re
 import numpy as np
 
 from utils.feature_vector import FeatureVector
@@ -44,6 +45,10 @@ class PrincipalComponentAnalysis:
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
 
         return reduced_dataset_feature_vector, attributes
+
+    def compute_subject_PCA(self, subjects_similarity_matrix, k):
+        subjects_latent_semantics, attributes = self.compute_PCA(subjects_similarity_matrix, k)
+        return subjects_latent_semantics, attributes
 
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)

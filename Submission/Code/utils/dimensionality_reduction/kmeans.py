@@ -22,6 +22,17 @@ class KMeans:
         reduced_dataset_feature_vector = np.array(reduced_dataset_feature_vector).T
         return reduced_dataset_feature_vector
 
+    def compute_subject_KMeans(self, subjects_similarity_matrix, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
+        attributes['subjects_similarity_matrix'] = subjects_similarity_matrix
+        centroids = self.compute_centroids(subjects_similarity_matrix, k)
+        attributes['centroids'] = centroids
+        subjects_latent_semantics = self.compute_reduced_dataset_feature_vector(centroids, subjects_similarity_matrix)
+        attributes['subjects_latent_semantics'] = subjects_latent_semantics
+        return subjects_latent_semantics, attributes
+
     def compute(self, images, k):
         # All the intermediate computations will be stored in the attributes dictionary 
         # so that it can be stored in the output file in the end.     
