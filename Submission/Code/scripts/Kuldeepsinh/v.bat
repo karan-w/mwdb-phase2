@@ -3,8 +3,8 @@
 
 set model=HOG
 set image_type=cc
-set /A k_value = 7
-set dimensionality_reduction_technique=LDA
+set /A k_value=7
+set dimensionality_reduction_technique=kmeans
 set images_folder_path=E:/projects/workspace/mwdb-phase2/Submission/Code/tasks/all
 
 set output_folder_path=E:/projects/workspace/mwdb-phase2/Submission/Outputs/Task3

@@ -49,5 +49,5 @@ class KMeans:
 
     def compute2(self,object_feature_vector,k):
         centroids = self.compute_centroids(object_feature_vector, k)
-        reduced_dataset_feature_vector, attributes = self.compute_reduced_dataset_feature_vector(centroids,object_feature_vector)
+        reduced_dataset_feature_vector = self.compute_reduced_dataset_feature_vector(centroids,object_feature_vector)
         return reduced_dataset_feature_vector
