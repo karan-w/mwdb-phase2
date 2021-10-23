@@ -85,25 +85,26 @@ class Task1:
         return X_reduced
 
     def SVD(self, feature_vector, k):
+
         U, s, V_t = svd(feature_vector)
-        
         #creating mxn sigma matrix
+        Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
 
-        # Sigma = np.zeros((feature_vector.shape[0], feature_vector.shape[1]))
-
-        fv_shape = np.shape(feature_vector)
-        print("fv shape ",fv_shape[0])
-        Sigma = np.zeros(fv_shape[0], fv_shape[1])
+        # ======================================================
+        # fv_shape = np.shape(feature_vector)
+        # print("fv shape ",fv_shape[0])
+        # Sigma = np.zeros([fv_shape[0], fv_shape[1]],dtype=object)
         # Sigma = np.zeros((np.shape(feature_vector))[0], (np.shape(feature_vector))[1])
 
         #populating sigma with nxn diagonal matrix
-        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)  
+        Sigma[:feature_vector.shape[0], :feature_vector.shape[0]] = np.diag(s)
 
         k_latent = k
         Sigma = Sigma[:, :k_latent]
         V_t = V_t[:k_latent, :]
         transformed_matrix = U.dot(Sigma)
 
+        # ======================================================================
         return transformed_matrix
 
     def LDA(self, feature_vector, k):
@@ -119,7 +120,7 @@ class Task1:
                 feature_vector = self.color_moments(i) # 1 * 3 * 8 * 8 (8 * 8 + 8 * 8 + 8 * 8) 
                 feature_vector = np.squeeze(feature_vector) # Reshapes the matrix to 3 * 8 * 8 
                 feature_vector = np.transpose(feature_vector) # 8 * 8 * 3 
-                feature_vector = color.rgb2gray(feature_vector) # 8 * 8 - only one CM is retained, other two discarded
+                # feature_vector = color.rgb2gray(feature_vector) # 8 * 8 - only one CM is retained, other two discarded
                 data_matrix.append(feature_vector)
             data_matrix = np.mean(data_matrix, axis=0)
 
@@ -150,16 +151,12 @@ class Task1:
     def dimension_red(self, technique, feature_vector, k):
         if technique == 'PCA':
             latent_semantic = self.PCA(feature_vector, k)
-
         elif technique == 'SVD':
             latent_semantic = self.SVD(feature_vector, k)
-
         elif technique == 'LDA':
             latent_semantic = self.LDA(feature_vector, k)
-        
         elif technique == 'kmeans':
             latent_semantic = self.kmeans(feature_vector, k)
-
         return latent_semantic
 
     # def kmeans(self, )
@@ -207,6 +204,8 @@ if __name__ == "__main__":
     with open(output_json, 'w') as fp:
         for dictionary in subject_weight_matrix:
             json.dump(dictionary, fp, indent=4)
+
+
 
 # TODO: Check all dimensionality reduction techniques
 # TODO: Generalize code 

@@ -21,7 +21,6 @@ class SingularValueDecomposition:
         reduced_core_matrix = reduced_core_matrix[:, :k_latent]
         right_factor_matrix = right_factor_matrix[:k_latent, :]
         reduced_dataset_feature_vector = left_factor_matrix.dot(reduced_core_matrix)
-
         return reduced_dataset_feature_vector
 
     def compute(self, images, k):

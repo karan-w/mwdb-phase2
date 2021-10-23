@@ -41,33 +41,41 @@ if __name__=="__main__":
     print(np.shape(type_feature_mat))
     start = timer()
     fv_size = 0
+
     for file in files:
         image_details = file.replace('.png','').split('-')
         image_type = image_details[1]
         image_index = (int(image_details[2])-1)*10 + int(image_details[3])-1
         image_data=[img.imread("all/"+file)]
         fv = Task1().features(feature_model, image_data)
+
         if fv_size==0:
             fv_size = np.shape(fv.flatten())
+        # print("-----------")
+        # print(type_dict[image_type],image_index)
+        # print("-----------")
         type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
 
+
     print(np.shape(type_feature_mat[2]))
+
     z = np.zeros(fv_size, dtype=object)
+
+
     for i in range(len(type_feature_mat)):
         for j in range(len(type_feature_mat[0])):
             if np.shape(type_feature_mat[i][j]) == (0,):
                 type_feature_mat[i][j] = z
+
     #
     # =================================START=====================================
 
     type_type_mat = [[0 for x in range(len(type_dict))] for y in range(len(type_dict))]
 
-
-
     for i in range(len(type_feature_mat)):
         for j in range(len(type_feature_mat)):
             print(np.shape(type_feature_mat[i][j]))
-            if np.shape(type_feature_mat[i][j])==(1,1764):
+            if np.shape(type_feature_mat[i][j][0])==1:
                 print(type_feature_mat[i][j])
             print(np.shape(np.concatenate(type_feature_mat[i]).flat))
             type_type_mat[i][j] = distance.cityblock(np.concatenate(type_feature_mat[i]).flat,np.concatenate(type_feature_mat[j]).flat)
@@ -78,16 +86,15 @@ if __name__=="__main__":
     max_value = max(max(type_type_mat, key=max))
 
     for i in range(len(type_dict)):
-        type_type_mat[i] = np.array(type_type_mat[i],dtype=float)
+        # type_type_mat[i] = np.array(type_type_mat[i],dtype=float)
         for j in range(len(type_dict)):
             type_type_mat[i][j] = 1 - (type_type_mat[i][j] / max_value)
+    type_type_mat = np.array(type_type_mat,dtype=float)
     print(type_type_mat)
-
     dr = Task1().dimension_red(reduction_method, type_type_mat, k_value)
     print("dr \n",dr)
         # =================================END=====================================
         #
-
 
     # type_feature_mat_t = np.transpose(type_feature_mat)
     #
