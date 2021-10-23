@@ -150,6 +150,19 @@ class Task1:
 
         subject_weight_matrix = subject_weight_matrix.real.tolist()
 
+        sorted_subject_weight_matrix = []
+        for i in range(len(subject_weight_matrix[0])):
+            subject_weight_pairs = dict.fromkeys(['Latent Semantic', 'Subjects', 'Weights'])
+            subjects = []
+            weights = []
+            for j in range(len(subject_weight_matrix)):
+                subjects.append(str(j))
+                weights.append(subject_weight_matrix[j][i])
+            subject_weight_pairs['Latent Semantic'] = i
+            subject_weight_pairs['Weights'] = [x for _,x in sorted(zip(subjects,weights), reverse=True)]
+            subject_weight_pairs['Subjects'] = [x for x,_ in sorted(zip(subjects,weights), reverse=True)]
+            sorted_subject_weight_matrix.append(subject_weight_pairs)
+
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
         output = {
             # args is not serializable
@@ -164,7 +177,7 @@ class Task1:
             'images': images,
             'subjects': subjects,
             'drt_attributes': drt_attributes, 
-            'subject_weight_matrix': subject_weight_matrix
+            'subject_weight_matrix': sorted_subject_weight_matrix
         }
         return output
 
@@ -184,7 +197,7 @@ if __name__ == "__main__":
 
     image_reader = ImageReader()
 
-    images = image_reader.get_images(args.images_folder_path, args.x)
+    images = image_reader.get_images_by_subjects(args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)
     
@@ -198,4 +211,4 @@ if __name__ == "__main__":
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
 
     # TODO: Sorted subjects for each weight 
-    task.save_output(output, args.output_folder_path)
+    # task.save_output(output, args.output_folder_path)
