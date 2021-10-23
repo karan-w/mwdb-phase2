@@ -44,6 +44,19 @@ class Task9:
         # plt.savefig("graph.png")
         plt.show()
 
+    def Compute_Personalized_PageRank(self,Subjects,TransitionMatrix,SeedNodeSet):
+        Transportation_Probability = 0.15
+        Identity_Matrix = np.identity(len(Subjects), dtype = float)
+        Coefficient_of_PI = Identity_Matrix - ((1-Transportation_Probability)*TransitionMatrix)
+        ReSeeding_Vector = np.zeros(len(Subjects))
+        ReSeeding_Value = 1.0/len(SeedNodeSet)
+        for x in SeedNodeSet:
+            ReSeeding_Vector[x] = ReSeeding_Value
+        ReSeeding_Vector = Transportation_Probability * ReSeeding_Vector
+        PI_Value = np.dot(np.linalg.inv(Coefficient_of_PI),ReSeeding_Vector)
+        print(PI_Value)
+        return
+
     def Save_DataFrame_To_JSON(self,data):
         return data.to_json('./Task9.json', orient='index')
 
@@ -63,7 +76,7 @@ if __name__ == "__main__":
     n_Similarity_Graph = task.Create_Similarity_Graph(subjects,Subject_Subject_Similarity_Matrix,Subject_Index_Descending_Matrix,n)
     task.Draw_Graph(n_Similarity_Graph)
     Complete_Similarity_Graph = task.Create_Similarity_Graph(subjects,Subject_Subject_Similarity_Matrix,Subject_Index_Descending_Matrix)
-    print(Complete_Similarity_Graph)
+    task.Compute_Personalized_PageRank(subjects,Subject_Subject_Similarity_Matrix,input_subjects)
     # for u, v, weight in Complete_Similarity_Graph.edges(data="weight"):
     #     print(u,v,weight)
     # Subject_Subject_Similarity_Matrix.to_json(args.output_folder_path+'/Task9.json')
