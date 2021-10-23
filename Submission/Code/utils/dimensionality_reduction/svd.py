@@ -8,6 +8,9 @@ class SingularValueDecomposition:
         pass
 
     def compute_SVD(self, dataset_feature_vector, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
         left_factor_matrix, core_matrix, right_factor_matrix = svd(dataset_feature_vector)
 
         # Reduce the core matrix 
@@ -21,13 +24,14 @@ class SingularValueDecomposition:
         reduced_core_matrix = reduced_core_matrix[:, :k_latent]
         right_factor_matrix = right_factor_matrix[:k_latent, :]
         reduced_dataset_feature_vector = left_factor_matrix.dot(reduced_core_matrix)
-        return reduced_dataset_feature_vector
+
+        return reduced_dataset_feature_vector, attributes
 
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
-        reduced_dataset_feature_vector = self.compute_SVD(dataset_feature_vector, k)
+        reduced_dataset_feature_vector, attributes = self.compute_SVD(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
-        return images
+        return images, attributes
         
         
     # 1. Left Factor Matrix 
