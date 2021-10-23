@@ -56,3 +56,6 @@ class PrincipalComponentAnalysis:
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
 
+    def compute2(self,object_feature_vector,k):
+        reduced_dataset_feature_vector, attributes = self.compute_PCA(object_feature_vector, k)
+        return reduced_dataset_feature_vector

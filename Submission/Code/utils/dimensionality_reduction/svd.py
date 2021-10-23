@@ -36,7 +36,10 @@ class SingularValueDecomposition:
         reduced_dataset_feature_vector, attributes = self.compute_SVD(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
-        
+
+    def compute2(self, object_feature_vector, k):
+        reduced_dataset_feature_vector, attributes = self.compute_SVD(object_feature_vector, k)
+        return reduced_dataset_feature_vector
         
     # 1. Left Factor Matrix 
     # 2. Core matrix

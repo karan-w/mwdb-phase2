@@ -51,6 +51,13 @@ class ImageReader:
         logger.info("Reading images for all the subjects.")
         image_filenames = self.get_all_image_filenames(folder_path, image_type)
         images = []
+        for image_filename in image_filenames:
+            image_type, subject_id, image_id = self.parse_image_filename(image_filename)
+            image = self.get_image(folder_path, image_type, subject_id, image_id)
+            images.append(image)
+
+        # TODO: Sort images by subject_id and image_id
+        return images
 
     def get_images2(self, folder_path):
         logger.info("Reading all images from the folder.")
@@ -69,14 +76,7 @@ class ImageReader:
             image = self.get_image(folder_path,image_type,image_subject,image_details[3])
             images.append(image)
         return images
-        for image_filename in image_filenames:
-            image_type, subject_id, image_id = self.parse_image_filename(image_filename)
-            image = self.get_image(folder_path, image_type, subject_id, image_id)
-            images.append(image)
 
-        # TODO: Sort images by subject_id and image_id
-
-        return images 
 
     def get_all_image_filenames(self, folder_path):
         image_filenames = [image_filename for image_filename in os.listdir(folder_path) if re.search(self.image_filename_regex, image_filename)]

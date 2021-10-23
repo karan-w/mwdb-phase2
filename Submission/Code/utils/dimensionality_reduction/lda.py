@@ -25,3 +25,7 @@ class LatentDirichletAllocation:
         reduced_dataset_feature_vector, attributes = self.compute_LDA(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
+
+    def compute2(self,object_feature_vector,k):
+        reduced_dataset_feature_vector, attributes = self.compute_LDA(object_feature_vector, k)
+        return reduced_dataset_feature_vector

@@ -12,7 +12,7 @@ from utils.image import Image as custom_img
 from scipy.spatial import distance
 import matplotlib.image as img
 import numpy as np
-# from tasks.Task1 import Task1
+# from tasks.Task1_test import Task1
 from timeit import default_timer as timer
 from datetime import timedelta
 from sklearn import preprocessing
@@ -80,16 +80,15 @@ class Task3:
         else:
             raise Exception(f"Unknown feature model - {feature_model}")
 
-
     def reduce_dimensions(self, dimensionality_reduction_technique, images, k):
         if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-            return PrincipalComponentAnalysis().compute(images, k)
+            return PrincipalComponentAnalysis().compute2(images, k)
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-            return SingularValueDecomposition().compute(images, k)
+            return SingularValueDecomposition().compute2(images, k)
         elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
-            return LatentDirichletAllocation().compute(images, k)
+            return LatentDirichletAllocation().compute2(images, k)
         elif dimensionality_reduction_technique == KMEANS:
-            return KMeans().compute(images, k)
+            return KMeans().compute2(images, k)
         else:
             raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
@@ -98,11 +97,7 @@ if __name__=="__main__":
 
     task = Task3()
     parser = task.setup_args_parser()
-
     args = parser.parse_args()
-    # task.log_args(args)
-
-    # task.log_args(args)
 
     image_reader = ImageReader()
     type_matrix = []
@@ -113,7 +108,6 @@ if __name__=="__main__":
         type_matrix.append([])
 
     print(np.shape(type_feature_mat))
-
     start = timer()
     fv_size = 0
 
@@ -128,111 +122,19 @@ if __name__=="__main__":
         imgg = image_reader.get_image(args.images_folder_path,image_type,subject_id,image_id)
 
         # image_data=[img.imread("all/"+file)]
-        fv = task.compute_feature_vectors(args.model,imgg.feature_vector)
+        fv = task.compute_feature_vectors(args.model,imgg)
+
+        # print("fv \n",fv)
+        print("-----------------------------")
+        print(np.shape(fv.feature_vector))
         # fv = Task1().features(feature_model, image_data)
-
+        fv.feature_vector = np.array(fv.feature_vector)
         if fv_size==0:
-            fv_size = np.shape(fv.flatten())
-        # print("-----------")
-        # print(type_dict[image_type],image_index)
-        # print("-----------")
-        type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
-
-
-    # model, x, k, dimensionality_reduction_technique, images_folder_path, output_folder_path
-
-
-    # images = image_reader.get_images(args.images_folder_path, args.x)
-    # images = image_reader.get_images2(args.images_folder_path)
-
-    # images = task.compute_feature_vectors(args.model,images)
-
-
-
-
-
-
-
-    # images = task.compute_feature_vectors(args.model, images)
-
-    # files = [f for f in os.listdir(args.images_folder_path) if isfile(join(args.images_folder_path, f))]
-    # for file in files:
-    #     # print(type(image[0]))
-    #     image_details = file.replace('.png', '').split('-')
-    #
-    #     image_type = image_details[1]
-    #     image_index = (int(image_details[2]) - 1) * 10 + int(image_details[3]) - 1
-    #
-    #     image = [img.imread(args.images_folder_path + "/" + file)]
-    #
-    #     image_filepath = os.path.join(args.images_folder_path, file)
-    #     image = custom_img(file, image, image_details[2], image_details[3], image_type, image_filepath)
-    #
-    #     fv = task.compute_feature_vectors(args.model, image)[0]
-    #
-    #
-    #     # fv = Task1().features(args.dimensionality_reduction_technique, image)
-    #
-    #     if fv_size == 0:
-    #         fv_size = np.shape(fv.flatten())
-    #     # print("-----------")
-    #     # print(type_dict[image_type],image_index)
-    #     # print("-----------")
-    #     type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
-
-
-    # images = task.compute_feature_vectors(args.model, images)
-
-    # images = task.reduce_dimensions(args.dimensionality_reduction_technique, images, args.k)
-
-    # subjects = task.assign_images_to_subjects(images)
-
-
-    # feature_model = str(input('Choose the feature model: '))
-    # k_value = int(input('Enter the value of k: '))
-    # reduction_method = str(input('Choose the dimensionality reduction technique: '))
-
-
-    # base_path = Path(__file__).parent
-    #
-    # file_name = "phase2_data.zip"
-    # # zip_file_path = (base_path / "../../../phase2_data.zip").resolve()
-    # with ZipFile(file_name, 'r') as ziip:
-    #     ziip.extractall()
-    #
-    # file_path = (base_path / "all/").resolve()
-    # files = [f for f in listdir(file_path) if isfile(join(file_path, f))]
-
-    # image_data=[]
-
-    type_matrix=[]
-    type_feature_mat = [[[] for i in range(400)] for j in range(12)]
-    # type_feature_mat = [[] for i in range(12)]
-
-    for i in range(13):
-        type_matrix.append([])
-
-    print(np.shape(type_feature_mat))
-    start = timer()
-    fv_size = 0
-
-
-    # for file in files:
-    #     image_details = file.replace('.png','').split('-')
-    #     image_type = image_details[1]
-    #     image_index = (int(image_details[2])-1)*10 + int(image_details[3])-1
-    #     image_data=[img.imread("all/"+file)]
-    #     fv = Task1().features(feature_model, image_data)
-    #
-    #     if fv_size==0:
-    #         fv_size = np.shape(fv.flatten())
-    #     # print("-----------")
-    #     # print(type_dict[image_type],image_index)
-    #     # print("-----------")
-    #     type_feature_mat[type_dict[image_type]][image_index] = fv.flatten()
-
+            fv_size = np.shape(fv.feature_vector.flatten())
+        type_feature_mat[type_dict[image_type]][image_index] = fv.feature_vector.flatten()
     print(np.shape(type_feature_mat[2]))
 
+    print(fv_size)
     z = np.zeros(fv_size, dtype=object)
 
 
@@ -244,6 +146,7 @@ if __name__=="__main__":
     #
     # =================================START=====================================
 
+    print("type ",np.shape(type_feature_mat))
     type_type_mat = [[0 for x in range(len(type_dict))] for y in range(len(type_dict))]
 
     for i in range(len(type_feature_mat)):
@@ -252,8 +155,8 @@ if __name__=="__main__":
             if np.shape(type_feature_mat[i][j][0])==1:
                 print(type_feature_mat[i][j])
             print(np.shape(np.concatenate(type_feature_mat[i]).flat))
+            print(np.shape(np.concatenate(type_feature_mat[j]).flat))
             type_type_mat[i][j] = distance.cityblock(np.concatenate(type_feature_mat[i]).flat,np.concatenate(type_feature_mat[j]).flat)
-
 
     print(type_type_mat)
 
@@ -265,7 +168,6 @@ if __name__=="__main__":
             type_type_mat[i][j] = 1 - (type_type_mat[i][j] / max_value)
     type_type_mat = np.array(type_type_mat,dtype=float)
     print(type_type_mat)
-
 
     dr = task.reduce_dimensions(args.dimensionality_reduction_technique, type_type_mat, args.k)
 
