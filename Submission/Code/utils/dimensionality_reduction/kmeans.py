@@ -33,6 +33,17 @@ class KMeans:
         attributes['subjects_latent_semantics'] = subjects_latent_semantics
         return subjects_latent_semantics, attributes
 
+    def compute_type_KMeans(self, types_similarity_matrix, k):
+        # All the intermediate computations will be stored in the attributes dictionary 
+        # so that it can be stored in the output file in the end.     
+        attributes = {}
+        attributes['types_similarity_matrix'] = types_similarity_matrix
+        centroids = self.compute_centroids(types_similarity_matrix, k)
+        attributes['centroids'] = centroids
+        types_latent_semantics = self.compute_reduced_dataset_feature_vector(centroids, types_similarity_matrix)
+        attributes['types_similarity_matrix'] = types_latent_semantics
+        return types_latent_semantics, attributes
+
     def compute(self, images, k):
         # All the intermediate computations will be stored in the attributes dictionary 
         # so that it can be stored in the output file in the end.

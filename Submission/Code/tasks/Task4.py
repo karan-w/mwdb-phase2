@@ -75,18 +75,31 @@ class Task4:
         else:
             raise Exception(f"Unknown feature model - {feature_model}")
 
+    def get_distinct_subject_ids(self, images):
+        distinct_subject_ids = set()
+        for image in images:
+            distinct_subject_ids.add(image.subject_id)
+        return sorted(list(distinct_subject_ids))
+
     def assign_images_to_subjects(self, images):
+        subject_ids = self.get_distinct_subject_ids(images)
         subjects = []
 
-        for index in range(0, 400, 10):
-            subject = Subject(images[index:index+10])
+        # Group images for each distinct subject_id 
+        for subject_id in subject_ids:
+            subject_images = []
+            for image in images:
+                if(image.subject_id == subject_id):
+                    subject_images.append(image)
+            subject = Subject(subject_images)
             subject.create_subject_feature_vector(subject.images)
             subjects.append(subject)
 
+        # Return all the distinct subjects as a list
         return subjects
     
     #computing subject-subject similarity matrix
-    def compute_similarity_matrix(self, subjects):
+    def compute_subject_similarity_matrix(self, subjects):
         subject_feature_vector = FeatureVector().create_subjects_feature_vector(subjects)
         subject_feature_vector_t = np.transpose(subject_feature_vector)
         dist_dist_matrix = [[0 for x in range(40)] for y in range(40)]
@@ -119,19 +132,19 @@ class Task4:
     
         return subject_similarity_matrix
 
-    def reduce_dimensions(self, dimensionality_reduction_technique, subjects_similarity_matrix, k):
+    def reduce_dimensions(self, dimensionality_reduction_technique, subject_similarity_matrix, k):
         if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-            return PrincipalComponentAnalysis().compute_subject_PCA(subjects_similarity_matrix, k)
+            return PrincipalComponentAnalysis().compute_subject_PCA(subject_similarity_matrix, k)
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-            return SingularValueDecomposition().compute_subject_SVD(subjects_similarity_matrix, k)
+            return SingularValueDecomposition().compute_subject_SVD(subject_similarity_matrix, k)
         elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
-            return LatentDirichletAllocation().compute_subject_LDA(subjects_similarity_matrix, k)
+            return LatentDirichletAllocation().compute_subject_LDA(subject_similarity_matrix, k)
         elif dimensionality_reduction_technique == KMEANS:
-            return KMeans().compute_subject_KMeans(subjects_similarity_matrix, k)
+            return KMeans().compute_subject_KMeans(subject_similarity_matrix, k)
         else:
             raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
-    def build_output(self, args, images, drt_attributes, subjects, subject_weight_matrix):
+    def build_output(self, args, images, drt_attributes, subjects, subject_weight_matrix, subject_similarity_matrix):
         # 1. Preprocess all variables/objects so they can be serialized
         # for image in images:
         #     image.matrix = None
@@ -174,6 +187,7 @@ class Task4:
             # 'subjects': subjects,
             # 'drt_attributes': drt_attributes, 
             'subject_weight_matrix': sorted_subject_weight_matrix,
+            'subject-subject-similarity-matrix': subject_similarity_matrix.real.tolist(),
         }
         return output
 
@@ -193,17 +207,17 @@ if __name__ == "__main__":
 
     image_reader = ImageReader()
 
-    images = image_reader.get_images(args.images_folder_path, args.x)
+    images = image_reader.get_all_images_in_folder(args.images_folder_path)
 
     images = task.compute_feature_vectors(args.model, images)
 
     subjects = task.assign_images_to_subjects(images)
 
-    similarity_matrix = task.compute_similarity_matrix(subjects)
+    subject_similarity_matrix = task.compute_subject_similarity_matrix(subjects)
 
-    subject_weight_matrix, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, similarity_matrix, args.k)
+    subject_weight_matrix, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, subject_similarity_matrix, args.k)
     
-    output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
+    output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix, subject_similarity_matrix)
 
     task.save_output(output, args.output_folder_path)
 
