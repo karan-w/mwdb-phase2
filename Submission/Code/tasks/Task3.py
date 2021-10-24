@@ -13,7 +13,6 @@ from sklearn.datasets import fetch_olivetti_faces
 from scipy.linalg import svd
 from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
-from gensim.models import LdaModel
 import json
 import argparse
 from scipy.spatial import distance
@@ -112,24 +111,33 @@ class Task3:
         dist_dist_matrix = np.array(dist_dist_matrix)
             
         #reshaping matrix to convert it to 1d array and then normalizing it
-        dist_dist_matrix = dist_dist_matrix.reshape(1, len(dist_dist_matrix[0])*len(dist_dist_matrix[0]))
+                        # dist_dist_matrix = dist_dist_matrix.reshape(1, len(dist_dist_matrix[0])*len(dist_dist_matrix[0]))
+
+        max_value = max(max(dist_dist_matrix, key=max))
+
+        for i in range(len(dist_dist_matrix)):
+            # type_type_mat[i] = np.array(type_type_mat[i],dtype=float)
+            for j in range(len(dist_dist_matrix)):
+                dist_dist_matrix[i][j] = 1 - (dist_dist_matrix[i][j] / max_value)
+        # type_type_mat = np.array(dist_dist_matrix, dtype=float)
 
         #we normazlize the distances
-        dist_dist_matrix = preprocessing.normalize(dist_dist_matrix.reshape(1, -1), axis=1)
 
-        #reshaping back to 40 x 40 matrix
-        dist_dist_matrix = dist_dist_matrix.reshape(12, 12)
-
-        #using 1-d_norm to calculate actual similairty
-        type_similarity_matrix = [[0 for x in range(12)] for y in range(12)]
-        for i in range(len(dist_dist_matrix[0])):
-            for j in range(len(dist_dist_matrix[1])):
-                type_similarity_matrix[i][j] = 1 - dist_dist_matrix[i][j]
-
-        #convert to numpy array
-        type_similarity_matrix = np.array(type_similarity_matrix)
+                        # dist_dist_matrix = preprocessing.normalize(dist_dist_matrix.reshape(1, -1), axis=1)
+                        #
+                        # #reshaping back to 40 x 40 matrix
+                        # dist_dist_matrix = dist_dist_matrix.reshape(12, 12)
+                        #
+                        # #using 1-d_norm to calculate actual similairty
+                        # type_similarity_matrix = [[0 for x in range(12)] for y in range(12)]
+                        # for i in range(len(dist_dist_matrix[0])):
+                        #     for j in range(len(dist_dist_matrix[1])):
+                        #         type_similarity_matrix[i][j] = 1 - dist_dist_matrix[i][j]
+                        #
+                        # #convert to numpy array
+                        # type_similarity_matrix = np.array(type_similarity_matrix)
     
-        return type_similarity_matrix
+        return dist_dist_matrix
 
     def reduce_dimensions(self, dimensionality_reduction_technique, type_similarity_matrix, k):
         if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
@@ -167,8 +175,8 @@ class Task3:
                 types.append(str(j))
                 weights.append(type_weight_matrix[j][i])
             type_weight_pairs['Latent Semantic'] = i
-            type_weight_pairs['Weights'] = [x for _,x in sorted(zip(types,weights), reverse=True)]
-            type_weight_pairs['Types'] = [x for x,_ in sorted(zip(types,weights), reverse=True)]
+            type_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,types), reverse=True)]
+            type_weight_pairs['Types'] = [x for _,x in sorted(zip(weights,types), reverse=True)]
             sorted_type_weight_matrix.append(type_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
