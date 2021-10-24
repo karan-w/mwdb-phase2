@@ -111,10 +111,10 @@ class Task1:
     def preprocess_drt_attributes_for_output(self, dimensionality_reduction_technique, drt_attributes):
         if(dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS):
             # dataset_feature_vector, standardized_dataset_feature_vector, eigen_values, eigen_vectors, k_principal_components_eigen_vectors
-            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
-            drt_attributes['standardized_dataset_feature_vector'] = drt_attributes['standardized_dataset_feature_vector'].real.tolist()
-            drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
-            drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
+            # drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
+            # drt_attributes['standardized_dataset_feature_vector'] = drt_attributes['standardized_dataset_feature_vector'].real.tolist()
+            # drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
+            # drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
             drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes['k_principal_components_eigen_vectors'].real.tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
         
@@ -127,9 +127,10 @@ class Task1:
             drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
 
+
         elif dimensionality_reduction_technique == KMEANS: 
             # dataset_feature_vector, centroids, reduced_dataset_feature_vector
-            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            # drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
             drt_attributes['centroids'] = drt_attributes['centroids'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
         
@@ -176,7 +177,7 @@ class Task1:
                 'images_folder_path': args.images_folder_path,
                 'output_folder_path': args.output_folder_path
             },
-            'images': images,
+            # 'images': images,
             'subjects': subjects,
             'drt_attributes': drt_attributes, 
             'subject_weight_matrix': sorted_subject_weight_matrix

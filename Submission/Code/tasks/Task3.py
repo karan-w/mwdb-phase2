@@ -162,7 +162,7 @@ class Task3:
         #     subject.feature_vector = subject.feature_vector.real.tolist()
         #     subject.reduced_feature_vector = subject.reduced_feature_vector.real.tolist()
 
-        # drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique, drt_attributes)
+        drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique, drt_attributes)
 
         #subject_weight_matrix = subject_weight_matrix.real.tolist()
         
@@ -185,17 +185,17 @@ class Task3:
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
         output = {
             # args is not serializable
-            # 'args': {
-            #     'model': args.model,
-            #     'x': args.x,
-            #     'k': args.k,
-            #     'dimensionality_reduction_technique': args.dimensionality_reduction_technique,
-            #     'images_folder_path': args.images_folder_path,
-            #     'output_folder_path': args.output_folder_path
-            # },
+            'args': {
+                'model': args.model,
+                # 'x': args.x,
+                'k': args.k,
+                'dimensionality_reduction_technique': args.dimensionality_reduction_technique,
+                'images_folder_path': args.images_folder_path,
+                'output_folder_path': args.output_folder_path
+            },
             # 'images': images,
             # 'subjects': subjects,
-            # 'drt_attributes': drt_attributes, 
+            'drt_attributes': drt_attributes,
             'type_weight_matrix': sorted_type_weight_matrix,
             'type-type-similarity-matrix': type_similarity_matrix.real.tolist(),
         }

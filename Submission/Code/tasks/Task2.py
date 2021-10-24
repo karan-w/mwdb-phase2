@@ -180,7 +180,7 @@ class Task2:
                 'images_folder_path': args.images_folder_path,
                 'output_folder_path': args.output_folder_path
             },
-            'images': images,
+            # 'images': images,
             'types': types,
             'drt_attributes': drt_attributes, 
             'type_weight_matrix': sorted_type_weight_matrix
