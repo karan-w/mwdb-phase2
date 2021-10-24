@@ -25,7 +25,7 @@ class LatentDirichletAllocation:
         latent_dirichlet_allocation.fit(normalized_feature_vector)
         reduced_dataset_feature_vector = latent_dirichlet_allocation.transform(normalized_feature_vector)
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
-        attributes['components'] = latent_dirichlet_allocation_model.components_.tolist()
+        attributes['components'] = latent_dirichlet_allocation.components_.tolist()
         return reduced_dataset_feature_vector, attributes # 400 * k
 
     def compute_subject_LDA(self, subjects_similarity_matrix, k):
