@@ -14,6 +14,7 @@ from scipy.linalg import svd
 from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
 import json
+import logging
 import argparse
 from scipy.spatial import distance
 from sklearn import preprocessing
@@ -39,6 +40,9 @@ SINGULAR_VALUE_DECOMPOSITION = 'SVD'
 LATENT_DIRICHLET_ALLOCATION = 'LDA'
 KMEANS = 'kmeans'
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+
 class Task3:
     def __init__(self):
         pass
@@ -54,14 +58,14 @@ class Task3:
         
         return parser
 
-    # def log_args(self, args):
-    #     logger.debug("Received the following arguments.")
-    #     logger.debug(f'model - {args.model}')
-    #     logger.debug(f'x - {args.x}')
-    #     logger.debug(f'k - {args.k}')
-    #     logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
-    #     logger.debug(f'images_folder_path - {args.images_folder_path}')
-    #     logger.debug(f'output_folder_path - {args.output_folder_path}')
+    def log_args(self, args):
+        logger.debug("Received the following arguments.")
+        logger.debug(f'model - {args.model}')
+        logger.debug(f'x - {args.x}')
+        logger.debug(f'k - {args.k}')
+        logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
+        logger.debug(f'images_folder_path - {args.images_folder_path}')
+        logger.debug(f'output_folder_path - {args.output_folder_path}')
 
     def compute_feature_vectors(self, feature_model, images):
         if feature_model == COLOR_MOMENTS:
@@ -100,28 +104,30 @@ class Task3:
     def compute_type_similarity_matrix(self, types):
         type_feature_vector = FeatureVector().create_types_feature_vector(types)
         type_feature_vector_t = np.transpose(type_feature_vector)
-        dist_dist_matrix = [[0 for x in range(12)] for y in range(12)]
+        type_dist_matrix = [[0 for x in range(12)] for y in range(12)]
 
         #instead of multiplying D with D_t we use distance function to calculate distance between corresponsding values
         for i in range(len(type_feature_vector)):
             for j in range(len(type_feature_vector_t[0])):
                 for k in range(len(type_feature_vector_t)):
-                    dist_dist_matrix[i][j] += distance.cityblock(type_feature_vector[i][k], type_feature_vector_t[k][j])
+                    type_dist_matrix[i][j] += distance.cityblock(type_feature_vector[i][k], type_feature_vector_t[k][j])
         
-        dist_dist_matrix = np.array(dist_dist_matrix)
+        type_dist_matrix = np.array(type_dist_matrix)
             
         #reshaping matrix to convert it to 1d array and then normalizing it
-                        # dist_dist_matrix = dist_dist_matrix.reshape(1, len(dist_dist_matrix[0])*len(dist_dist_matrix[0]))
-
-        max_value = max(max(dist_dist_matrix, key=max))
-
-        for i in range(len(dist_dist_matrix)):
-            # type_type_mat[i] = np.array(type_type_mat[i],dtype=float)
-            for j in range(len(dist_dist_matrix)):
-                dist_dist_matrix[i][j] = 1 - (dist_dist_matrix[i][j] / max_value)
-        # type_type_mat = np.array(dist_dist_matrix, dtype=float)
+        type_dist_matrix = type_dist_matrix.reshape(1, len(type_dist_matrix[0])*len(type_dist_matrix[0]))
 
         #we normazlize the distances
+        type_dist_matrix = preprocessing.normalize(type_dist_matrix.reshape(1, -1), axis=1, norm='max')
+
+        #reshaping back to 40 x 40 matrix
+        type_dist_matrix = type_dist_matrix.reshape(12, 12)
+
+        #using 1-d_norm to calculate actual similairty
+        type_similarity_matrix = [[0 for x in range(12)] for y in range(12)]
+        for i in range(len(type_dist_matrix[0])):
+            for j in range(len(type_dist_matrix[1])):
+                type_similarity_matrix[i][j] = 1 - type_dist_matrix[i][j]
 
                         # dist_dist_matrix = preprocessing.normalize(dist_dist_matrix.reshape(1, -1), axis=1)
                         #
@@ -175,11 +181,8 @@ class Task3:
                 types.append(str(j))
                 weights.append(type_weight_matrix[j][i])
             type_weight_pairs['Latent Semantic'] = i
-
             type_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,types), reverse=True)]
             type_weight_pairs['Types'] = [x for _,x in sorted(zip(weights,types), reverse=True)]
-
-
             sorted_type_weight_matrix.append(type_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -224,6 +227,5 @@ if __name__ == "__main__":
     type_weight_matrix, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, type_similarity_matrix, args.k)
     
     output = task.build_output(args, images, drt_attributes, types, type_weight_matrix, type_similarity_matrix)
-    task.save_output(output, args.output_folder_path)
 
-# TODO: Sorting issue
+    task.save_output(output, args.output_folder_path)

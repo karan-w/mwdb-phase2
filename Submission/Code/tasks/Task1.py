@@ -169,8 +169,8 @@ class Task1:
                 subjects.append(str(j))
                 weights.append(subject_weight_matrix[j][i])
             subject_weight_pairs['Latent Semantic'] = i
-            subject_weight_pairs['Weights'] = [x for _, x in sorted(zip(subjects, weights), reverse=True)]
-            subject_weight_pairs['Subjects'] = [x for x, _ in sorted(zip(subjects, weights), reverse=True)]
+            subject_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,subjects), reverse=True)]
+            subject_weight_pairs['Subjects'] = [x for _,x in sorted(zip(weights,subjects), reverse=True)]
             sorted_subject_weight_matrix.append(subject_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -223,5 +223,4 @@ if __name__ == "__main__":
 
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
 
-    # TODO: Sorted subjects for each weight
     task.save_output(output, args.output_folder_path)

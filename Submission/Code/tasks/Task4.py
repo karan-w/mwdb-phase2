@@ -15,6 +15,7 @@ from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
 # from gensim.models import LdaModel
 import json
+import logging
 import argparse
 from scipy.spatial import distance
 from sklearn import preprocessing
@@ -40,6 +41,9 @@ SINGULAR_VALUE_DECOMPOSITION = 'SVD'
 LATENT_DIRICHLET_ALLOCATION = 'LDA'
 KMEANS = 'kmeans'
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+
 class Task4:
     def __init__(self):
         pass
@@ -48,7 +52,6 @@ class Task4:
         parser = argparse.ArgumentParser()
 
         parser.add_argument('--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS], required=True)
-        parser.add_argument('--x', type=str, required=True)
         parser.add_argument('--k', type=int, required=True)
         parser.add_argument('--dimensionality_reduction_technique', type=str, choices=[PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION, LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
         parser.add_argument('--images_folder_path', type=str, required=True)
@@ -56,14 +59,14 @@ class Task4:
         
         return parser
 
-    # def log_args(self, args):
-    #     logger.debug("Received the following arguments.")
-    #     logger.debug(f'model - {args.model}')
-    #     logger.debug(f'x - {args.x}')
-    #     logger.debug(f'k - {args.k}')
-    #     logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
-    #     logger.debug(f'images_folder_path - {args.images_folder_path}')
-    #     logger.debug(f'output_folder_path - {args.output_folder_path}')
+    def log_args(self, args):
+        logger.debug("Received the following arguments.")
+        logger.debug(f'model - {args.model}')
+        logger.debug(f'x - {args.x}')
+        logger.debug(f'k - {args.k}')
+        logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
+        logger.debug(f'images_folder_path - {args.images_folder_path}')
+        logger.debug(f'output_folder_path - {args.output_folder_path}')
 
     def compute_feature_vectors(self, feature_model, images):
         if feature_model == COLOR_MOMENTS:
@@ -102,30 +105,30 @@ class Task4:
     def compute_subject_similarity_matrix(self, subjects):
         subject_feature_vector = FeatureVector().create_subjects_feature_vector(subjects)
         subject_feature_vector_t = np.transpose(subject_feature_vector)
-        dist_dist_matrix = [[0 for x in range(40)] for y in range(40)]
+        subject_dist_matrix = [[0 for x in range(40)] for y in range(40)]
 
         #instead of multiplying D with D_t we use distance function to calculate distance between corresponsding values
         for i in range(len(subject_feature_vector)):
             for j in range(len(subject_feature_vector_t[0])):
                 for k in range(len(subject_feature_vector_t)):
-                    dist_dist_matrix[i][j] += distance.cityblock(subject_feature_vector[i][k], subject_feature_vector_t[k][j])
+                    subject_dist_matrix[i][j] += distance.cityblock(subject_feature_vector[i][k], subject_feature_vector_t[k][j])
         
-        dist_dist_matrix = np.array(dist_dist_matrix)
+        subject_dist_matrix = np.array(subject_dist_matrix)
          
         #reshaping matrix to convert it to 1d array and then normalizing it
-        dist_dist_matrix = dist_dist_matrix.reshape(1, len(dist_dist_matrix[0])*len(dist_dist_matrix[0]))
+        subject_dist_matrix = subject_dist_matrix.reshape(1, len(subject_dist_matrix[0])*len(subject_dist_matrix[0]))
 
-        #we normazlize the distances
-        dist_dist_matrix = preprocessing.normalize(dist_dist_matrix.reshape(1, -1), axis=1)
+        # #we normazlize the distances
+        subject_dist_matrix = preprocessing.normalize(subject_dist_matrix.reshape(1, -1), axis=1, norm='max')
 
-        #reshaping back to 40 x 40 matrix
-        dist_dist_matrix = dist_dist_matrix.reshape(40, 40)
+        # #reshaping back to 40 x 40 matrix
+        subject_dist_matrix = subject_dist_matrix.reshape(40, 40)
 
         #using 1-d_norm to calculate actual similairty
         subject_similarity_matrix = [[0 for x in range(40)] for y in range(40)]
-        for i in range(len(dist_dist_matrix[0])):
-            for j in range(len(dist_dist_matrix[1])):
-                subject_similarity_matrix[i][j] = 1 - dist_dist_matrix[i][j]
+        for i in range(len(subject_dist_matrix[0])):
+            for j in range(len(subject_dist_matrix[1])):
+                subject_similarity_matrix[i][j] = 1 - subject_dist_matrix[i][j]
 
         #convert to numpy array
         subject_similarity_matrix = np.array(subject_similarity_matrix)
@@ -168,8 +171,8 @@ class Task4:
                 subjects.append(str(j))
                 weights.append(subject_weight_matrix[j][i])
             subject_weight_pairs['Latent Semantic'] = i
-            subject_weight_pairs['Weights'] = [x for _,x in sorted(zip(subjects,weights), reverse=True)]
-            subject_weight_pairs['Subjects'] = [x for x,_ in sorted(zip(subjects,weights), reverse=True)]
+            subject_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,subjects), reverse=True)]
+            subject_weight_pairs['Subjects'] = [x for _,x in sorted(zip(weights,subjects), reverse=True)]
             sorted_subject_weight_matrix.append(subject_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -220,5 +223,3 @@ if __name__ == "__main__":
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix, subject_similarity_matrix)
 
     task.save_output(output, args.output_folder_path)
-
-# TODO: Sorting issue

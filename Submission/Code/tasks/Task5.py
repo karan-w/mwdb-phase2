@@ -10,6 +10,8 @@ import argparse
 import json
 from scipy.spatial.distance import cityblock
 from scipy.spatial.distance import euclidean
+import cv2
+import matplotlib.pyplot as plt
 
 from utils.image_reader import ImageReader
 from utils.feature_models.cm import ColorMoments
@@ -58,15 +60,15 @@ class Task5:
     logger.debug(f'images_folder_path - {args.images_folder_path}')
     logger.debug(f'output_folder_path - {args.output_folder_path}')
 
-  def compute_feature_vectors(self, feature_model, images):
-    if feature_model == COLOR_MOMENTS:
-      return ColorMoments().compute(images)
-    elif feature_model == EXTENDED_LBP:
-      return ExtendedLocalBinaryPattern().compute(images)
-    elif feature_model == HISTOGRAM_OF_GRADIENTS:
-      return HistogramOfGradients().compute(images)
-    else:
-      raise Exception(f"Unknown feature model - {feature_model}")
+  # def compute_feature_vectors(self, feature_model, images):
+  #   if feature_model == COLOR_MOMENTS:
+  #     return ColorMoments().compute(images)
+  #   elif feature_model == EXTENDED_LBP:
+  #     return ExtendedLocalBinaryPattern().compute(images)
+  #   elif feature_model == HISTOGRAM_OF_GRADIENTS:
+  #     return HistogramOfGradients().compute(images)
+  #   else:
+  #     raise Exception(f"Unknown feature model - {feature_model}")
 
   def compute_query_feature(self, feature_model, image):
     if feature_model == COLOR_MOMENTS:
@@ -83,7 +85,7 @@ class Task5:
     with open(latent_semantics_file, 'r') as f:
       latent_semantics = json.load(f)
 
-    return latent_semantics['args'], latent_semantics['drt_attributes']
+    return latent_semantics['args'], latent_semantics['drt_attributes'], latent_semantics['images']
 
   def reduce_dimensions(self, dimensionality_reduction_technique, images, reproject_array):
     if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
@@ -99,7 +101,7 @@ class Task5:
 
   def similarity(self, query_image, dataset):
     for image in dataset:
-      image.similarity = euclidean(image.reduced_feature_vector, query_image[0].reduced_feature_vector)
+      image['similarity'] = euclidean(image['reduced_feature_vector'], query_image[0].reduced_feature_vector)
     return dataset
 
 if __name__ == "__main__":
@@ -113,19 +115,15 @@ if __name__ == "__main__":
   image_reader = ImageReader()
 
   query_image = image_reader.get_query_image(args.query_image)
-  dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
+  # dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
 
-  print("init query img",np.shape(query_image.matrix))
-  print("init dataset", np.shape(dataset[2].matrix))
-
-
-  metadata, attributes = task.read_latent_semantics(args.latent_semantics_file)
+  metadata, attributes, images = task.read_latent_semantics(args.latent_semantics_file)
 
   feature_model = metadata['model']
   dr_technique = metadata['dimensionality_reduction_technique']
 
   query_image = task.compute_query_feature(feature_model, query_image)
-  dataset = task.compute_feature_vectors(feature_model, dataset)
+  # dataset = task.compute_feature_vectors(feature_model, dataset)
 
   print("after feature extr query img", np.shape(query_image.matrix))
   print("after feature extr dataset", np.shape(dataset[2].matrix))
@@ -144,20 +142,17 @@ if __name__ == "__main__":
 
   query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
 
-  print("query image ",np.shape(query_image[0].reduced_feature_vector))
-  print("reproject matrix ", np.shape(reproject_matrix))
+  # dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
 
-  print("data set ", np.shape(dataset[0].matrix))
+  dataset = task.similarity(query_image, images)
 
-  dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
+  dataset.sort(key=lambda d: d['similarity']) 
 
-  print("data set after dimension red. ", np.shape(dataset[0].reduced_feature_vector))
-  print("data set after dimension red. ", np.shape(dataset))
+  print([[dataset[i]['filename'], dataset[i]['similarity']] for i in range(args.n)])
 
-  dataset = task.similarity(query_image, dataset)
-
-
-
-  dataset.sort(key=lambda d: d.similarity) 
-
-  print([[dataset[i].filename, dataset[i].similarity] for i in range(args.n)])
+  for i in range(args.n):
+    image = cv2.imread(args.images_folder_path + "\\" + dataset[i]['filename'], cv2.IMREAD_GRAYSCALE)
+    plt.figure()
+    plt.imshow(image)
+    plt.title(str(dataset[i]['similarity']) + " " + dataset[i]['filename'])
+    plt.show()
