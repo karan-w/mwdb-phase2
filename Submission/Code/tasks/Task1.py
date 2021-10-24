@@ -127,10 +127,10 @@ class Task1:
                 'reduced_dataset_feature_vector'].real.tolist()
 
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-            # TODO: Complete after SVD implementation
-            # print(drt_attributes.keys())
-            pass
-        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
+            #right_factor_matrix (V_t)
+            drt_attributes['right_factor_matrix'] = drt_attributes['right_factor_matrix'].tolist()
+
+        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION: 
             # dataset_feature_vector, reduced_dataset_feature_vector
             drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()

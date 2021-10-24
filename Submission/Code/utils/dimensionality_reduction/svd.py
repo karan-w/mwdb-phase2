@@ -69,16 +69,10 @@ class SingularValueDecomposition:
         reduced_dataset_feature_vector, attributes = self.compute_SVD(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
-
-    def compute2(self, object_feature_vector, k):
-        reduced_dataset_feature_vector, attributes = self.compute_SVD(object_feature_vector, k)
-        return reduced_dataset_feature_vector
-    def compute_reprojection(self, images, right_factor_matrix):
-        dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
-        reduced_dataset_feature_vector = np.dot(dataset_feature_vector, right_factor_matrix.T)
-        images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
-        return images
         
+    def compute_reprojection(self, query_image, right_factor_matrix):
+        reduced_dataset_feature_vector = np.dot(query_image, right_factor_matrix) # (1, m) * (m, k)
+        return reduced_dataset_feature_vector
         
     # 1. Left Factor Matrix 
     # 2. Core matrix

@@ -12,7 +12,6 @@ from scipy.spatial.distance import cityblock
 from scipy.spatial.distance import euclidean
 import cv2
 import matplotlib.pyplot as plt
-
 from utils.image_reader import ImageReader
 from utils.feature_models.cm import ColorMoments
 from utils.feature_models.elbp import ExtendedLocalBinaryPattern
@@ -70,7 +69,7 @@ class Task5:
   #   else:
   #     raise Exception(f"Unknown feature model - {feature_model}")
 
-  def compute_query_feature(self, feature_model, image):
+  def compute_query_feature_vector(self, feature_model, image):
     if feature_model == COLOR_MOMENTS:
       return ColorMoments().get_color_moments_fd(image.matrix)
     elif feature_model == EXTENDED_LBP:
@@ -81,27 +80,45 @@ class Task5:
     else:
       raise Exception(f"Unknown feature model - {feature_model}")
 
+  def compute_reprojection_matrix(self, drt_technique):
+    reproject_matrix = None
+    if drt_technique == PRINCIPAL_COMPONENT_ANALYSIS:
+      reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
+    elif drt_technique == KMEANS:
+      reproject_matrix = np.array(attributes['centroids'])
+    elif drt_technique == LATENT_DIRICHLET_ALLOCATION:
+      reproject_matrix = np.array(attributes['components'])
+    elif drt_technique == SINGULAR_VALUE_DECOMPOSITION:
+      reproject_matrix = np.array(attributes['right_factor_matrix'])
+
+    return reproject_matrix
+
   def read_latent_semantics(self, latent_semantics_file):
     with open(latent_semantics_file, 'r') as f:
       latent_semantics = json.load(f)
 
     return latent_semantics['args'], latent_semantics['drt_attributes'], latent_semantics['images']
 
-  def reduce_dimensions(self, dimensionality_reduction_technique, images, reproject_array):
+  def reduce_dimensions(self, dimensionality_reduction_technique, query_image, reprojection_matrix):
     if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-      return PrincipalComponentAnalysis().compute_reprojection(images, reproject_array)
+      return PrincipalComponentAnalysis().compute_reprojection(query_image, reprojection_matrix)
     elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-      return SingularValueDecomposition().compute_reprojection(images, reproject_array)
+      return SingularValueDecomposition().compute_reprojection(query_image, reprojection_matrix)
     elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
-      return LatentDirichletAllocation().compute_reprojection(images, reproject_array)
+      return LatentDirichletAllocation().compute_reprojection(query_image, reprojection_matrix)
     elif dimensionality_reduction_technique == KMEANS:
-      return KMeans().compute_reprojection(images, reproject_array)
+      return KMeans().compute_reprojection(query_image, reprojection_matrix)
     else:
       raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
-  def similarity(self, query_image, dataset):
+  def compute_similarity(self, reduced_query_feature_vector, dataset):
     for image in dataset:
-      image['similarity'] = euclidean(image['reduced_feature_vector'], query_image[0].reduced_feature_vector)
+      # reduced_shape = np.shape(reduced_query_feature_vector)
+      # reduced_image = reduced_query_feature_vector
+      # this_shape = np.shape(image['reduced_feature_vector'])
+      # dataset_image = image['reduced_feature_vector']
+      distance = cityblock(reduced_query_feature_vector, image['reduced_feature_vector'])
+      image['similarity'] = 1 / distance
     return dataset
 
 if __name__ == "__main__":
@@ -120,39 +137,28 @@ if __name__ == "__main__":
   metadata, attributes, images = task.read_latent_semantics(args.latent_semantics_file)
 
   feature_model = metadata['model']
-  dr_technique = metadata['dimensionality_reduction_technique']
+  drt_technique = metadata['dimensionality_reduction_technique']
 
-  query_image = task.compute_query_feature(feature_model, query_image)
+  query_image = task.compute_query_feature_vector(feature_model, query_image)
   # dataset = task.compute_feature_vectors(feature_model, dataset)
 
-  print("after feature extr query img", np.shape(query_image.matrix))
-  print("after feature extr dataset", np.shape(dataset[2].matrix))
+  query_image = np.reshape(query_image, (1, -1))
+  #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
+  reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
-  reproject_matrix = None
-  if dr_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-    reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
-  elif dr_technique == KMEANS:
-    reproject_matrix = np.array(attributes['centroids'])
-  elif dr_technique == LATENT_DIRICHLET_ALLOCATION:
-    reproject_matrix = np.array(attributes['components'])
-  elif dr_technique == SINGULAR_VALUE_DECOMPOSITION:
-    reproject_matrix = np.array(attributes['right_factor_matrix'])
+  sh = np.shape(reprojection_matrix)
+  reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
 
-  # print("query image ", np.shape(query_image))
+  similarity_with_query_image = task.compute_similarity(reduced_query_feature_vector, images)
 
-  query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
+  sorted_images = sorted(similarity_with_query_image, key=lambda d: d['similarity'], reverse=True) 
 
-  # dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
-
-  dataset = task.similarity(query_image, images)
-
-  dataset.sort(key=lambda d: d['similarity']) 
-
-  print([[dataset[i]['filename'], dataset[i]['similarity']] for i in range(args.n)])
+  most_n_similar_images = [[sorted_images[i]['filename'], sorted_images[i]['similarity']] for i in range(args.n)]
 
   for i in range(args.n):
-    image = cv2.imread(args.images_folder_path + "\\" + dataset[i]['filename'], cv2.IMREAD_GRAYSCALE)
+    name = args.images_folder_path + "/" + most_n_similar_images[i][0], cv2.IMREAD_GRAYSCALE
+    image = cv2.imread(args.images_folder_path + "/" + most_n_similar_images[i][0], cv2.IMREAD_GRAYSCALE)
     plt.figure()
     plt.imshow(image)
-    plt.title(str(dataset[i]['similarity']) + " " + dataset[i]['filename'])
+    plt.title(most_n_similar_images[i][0])
     plt.show()
