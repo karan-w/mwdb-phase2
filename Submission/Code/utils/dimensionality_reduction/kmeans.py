@@ -56,9 +56,7 @@ class KMeans:
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
-
-    def compute_reprojection(self, images, centroids):
-        dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
-        reduced_dataset_feature_vector = self.compute_reduced_dataset_feature_vector(centroids, dataset_feature_vector)
-        images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
-        return images
+    
+    def compute_reprojection(self, query_image, centroids):
+        reduced_dataset_feature_vector = self.compute_reduced_dataset_feature_vector(query_image, centroids) # (1, m) * (m, k)
+        return reduced_dataset_feature_vector

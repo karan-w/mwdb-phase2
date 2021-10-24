@@ -196,6 +196,7 @@ if __name__ == "__main__":
     task.log_args(args)
 
     image_reader = ImageReader()
+    
     images = image_reader.get_images_by_type(args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)
