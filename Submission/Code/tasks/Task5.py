@@ -85,12 +85,9 @@ class Task5:
 
     return latent_semantics['args'], latent_semantics['drt_attributes']
 
-  def reproject_feature_vectors(self, feature_model, reproject_matrix, feature_vector):
-    return reproject_matrix
-
   def reduce_dimensions(self, dimensionality_reduction_technique, images, reproject_array):
     if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-      return PrincipalComponentAnalysis().compute(images, reproject_array)
+      return PrincipalComponentAnalysis().compute_reprojection(images, reproject_array)
     elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
       return SingularValueDecomposition().compute(images, reproject_array)
     elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
@@ -126,8 +123,18 @@ if __name__ == "__main__":
   query_image = task.compute_query_feature(feature_model, query_image)
   dataset = task.compute_feature_vectors(feature_model, dataset)
 
-  if feature_model == KMEANS:
+  reproject_matrix = None
+  if feature_model == PRINCIPAL_COMPONENT_ANALYSIS:
+    reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
+  elif feature_model == KMEANS:
     reproject_matrix = np.array(attributes['centroids'])
+  # elif feature_model == HISTOGRAM_OF_GRADIENTS:
+  #   reproject_matrix = np.array(attributes[''])
+
+  # print(len(reproject_matrix), len(reproject_matrix[0]))
+
+  # if feature_model == KMEANS:
+  #   reproject_matrix = np.array(attributes['centroids'])
 
   query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
 
