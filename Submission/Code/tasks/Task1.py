@@ -211,4 +211,4 @@ if __name__ == "__main__":
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
 
     # TODO: Sorted subjects for each weight 
-    # task.save_output(output, args.output_folder_path)
+    task.save_output(output, args.output_folder_path)
