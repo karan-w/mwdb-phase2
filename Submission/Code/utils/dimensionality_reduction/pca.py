@@ -63,3 +63,9 @@ class PrincipalComponentAnalysis:
     def compute2(self,object_feature_vector,k):
         reduced_dataset_feature_vector, attributes = self.compute_PCA(object_feature_vector, k)
         return reduced_dataset_feature_vector
+    def compute_reprojection(self, images, k_principal_components_eigen_vectors):
+        dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+        reduced_dataset_feature_vector = np.dot(dataset_feature_vector, k_principal_components_eigen_vectors) # (400, 1764) * (1764, 2)
+        images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
+        return images
+

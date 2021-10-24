@@ -10,6 +10,7 @@ import argparse
 import pandas as pd
 from utils.output import Output
 import os
+
 class Task9:
     def __init__(self):
         pass
@@ -93,7 +94,6 @@ class Task9:
             '{0} Most Significant Subjects Excluding Seed Set - {1}'.format(m,Seed_Set) : [x for x in Personalized_PageRank if x not in Seed_Set][:m]
         }
         return output
-
 
 if __name__ == "__main__":
     task = Task9()
