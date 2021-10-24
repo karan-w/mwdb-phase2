@@ -52,7 +52,7 @@ class SingularValueDecomposition:
         # reduced_core_matrix = reduced_core_matrix[:, :k_latent]
         # right_factor_matrix = right_factor_matrix[:k_latent, :]
         reduced_dataset_feature_vector = np.dot(dataset_feature_vector, right_factor_matrix.T)
-        attributes['right_factor_matrix'] = right_factor_matrix.tolist()
+        attributes['right_factor_matrix'] = right_factor_matrix
 
         return reduced_dataset_feature_vector, attributes
 
@@ -71,7 +71,7 @@ class SingularValueDecomposition:
         return images, attributes
         
     def compute_reprojection(self, query_image, right_factor_matrix):
-        reduced_dataset_feature_vector = np.dot(query_image, right_factor_matrix) # (1, m) * (m, k)
+        reduced_dataset_feature_vector = np.dot(query_image, right_factor_matrix.T) # (1, m) * (m, k)
         return reduced_dataset_feature_vector
         
     # 1. Left Factor Matrix 
