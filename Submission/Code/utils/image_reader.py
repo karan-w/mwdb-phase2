@@ -128,3 +128,13 @@ class ImageReader:
         return image_filenames
 
 # relation between images and  subjects
+
+    #for task 5,6,7
+    def get_query_image(self, image_filepath):
+        logger.info(f"Reading image at filepath {image_filepath}")
+        image_matrix = cv2.imread(image_filepath, cv2.IMREAD_GRAYSCALE)
+        if image_matrix is None:
+            raise Exception(f"Could not read image with the filepath {image_filepath}")
+        image = Image(image_filepath, image_matrix, None, None, None, image_filepath)
+        logger.debug(image.__str__())
+        return image
