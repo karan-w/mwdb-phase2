@@ -1,18 +1,28 @@
 from utils.feature_vector import FeatureVector
 from sklearn import decomposition
+from sklearn.preprocessing import MinMaxScaler
+from sklearn import preprocessing
 
 class LatentDirichletAllocation:
     def __init__(self) -> None:
         pass
 
+    def compute_normalized_feature_vector(self, dataset_feature_vector):
+        normalized_feature_vector = dataset_feature_vector.reshape(1, len(dataset_feature_vector)*len(dataset_feature_vector[0]))
+        normalized_feature_vector = preprocessing.normalize(normalized_feature_vector.reshape(1, -1), axis=1, norm='max')
+        normalized_feature_vector = normalized_feature_vector.reshape(len(dataset_feature_vector), len(dataset_feature_vector[0]))
+        return normalized_feature_vector
+
     def compute_LDA(self, dataset_feature_vector, k):
         # All the intermediate computations will be stored in the attributes dictionary 
         # so that it can be stored in the output file in the end.     
         attributes = {}
+        scaler = MinMaxScaler(feature_range=(0, 1))
         attributes['dataset_feature_vector'] = dataset_feature_vector
         latent_dirichlet_allocation = decomposition.LatentDirichletAllocation(n_components=k)
-        latent_dirichlet_allocation.fit(dataset_feature_vector)
-        reduced_dataset_feature_vector = latent_dirichlet_allocation.transform(dataset_feature_vector)
+        normalized_feature_vector = scaler.fit_transform(dataset_feature_vector)
+        latent_dirichlet_allocation.fit(normalized_feature_vector)
+        reduced_dataset_feature_vector = latent_dirichlet_allocation.transform(normalized_feature_vector)
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
         return reduced_dataset_feature_vector, attributes # 400 * k
 

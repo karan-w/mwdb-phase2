@@ -11,6 +11,8 @@ class SingularValueDecomposition:
         # All the intermediate computations will be stored in the attributes dictionary 
         # so that it can be stored in the output file in the end.     
         attributes = {}
+
+        #LeftFactorMatrix - nxk, Core matrix - kxk, RightFactorMatrix - kxm
         left_factor_matrix, core_matrix, right_factor_matrix = svd(dataset_feature_vector)
 
         # Reduce the core matrix 

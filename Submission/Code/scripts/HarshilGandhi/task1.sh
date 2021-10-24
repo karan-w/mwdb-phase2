@@ -1,10 +1,10 @@
 #!/bin/bash
 # Script to run task 1 on Harshil's laptop
 
-model=ELBP
+model=CM
 image_type=cc
 k_value=4
-dimensionality_reduction_technique=PCA
+dimensionality_reduction_technique=LDA
 images_folder_path="/Users/harshilgandhi/Documents/MWDB_Project/mwdb-phase2/data"
 output_folder_path="/Users/harshilgandhi/Documents/MWDB_Project/mwdb-phase2/Submission/Outputs/Task1"
 

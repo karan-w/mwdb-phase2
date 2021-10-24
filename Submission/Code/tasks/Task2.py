@@ -159,8 +159,8 @@ class Task2:
                 types.append(str(j))
                 weights.append(type_weight_matrix[j][i])
             type_weight_pairs['Latent Semantic'] = i
-            type_weight_pairs['Weights'] = [x for _,x in sorted(zip(types,weights), reverse=True)]
-            type_weight_pairs['Types'] = [x for x,_ in sorted(zip(types,weights), reverse=True)]
+            type_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,types), reverse=True)]
+            type_weight_pairs['Types'] = [x for _,x in sorted(zip(weights,types), reverse=True)]
             sorted_type_weight_matrix.append(type_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -208,6 +208,5 @@ if __name__ == "__main__":
     type_weight_matrix = task.compute_type_weight_matrix(types)
 
     output = task.build_output(args, images, drt_attributes, types, type_weight_matrix)
-    print(output)
-    # TODO: Sorted subjects for each weight 
-    # task.save_output(output, args.output_folder_path)
+    
+    task.save_output(output, args.output_folder_path)
