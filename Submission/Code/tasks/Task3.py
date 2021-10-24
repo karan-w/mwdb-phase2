@@ -175,8 +175,11 @@ class Task3:
                 types.append(str(j))
                 weights.append(type_weight_matrix[j][i])
             type_weight_pairs['Latent Semantic'] = i
+
             type_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,types), reverse=True)]
             type_weight_pairs['Types'] = [x for _,x in sorted(zip(weights,types), reverse=True)]
+
+
             sorted_type_weight_matrix.append(type_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -213,19 +216,14 @@ if __name__ == "__main__":
     # task.log_args(args)
 
     image_reader = ImageReader()
-
     images = image_reader.get_all_images_in_folder(args.images_folder_path)
-
     images = task.compute_feature_vectors(args.model, images)
 
     types = task.assign_images_to_types(images)
-
     type_similarity_matrix = task.compute_type_similarity_matrix(types)
-
     type_weight_matrix, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, type_similarity_matrix, args.k)
     
     output = task.build_output(args, images, drt_attributes, types, type_weight_matrix, type_similarity_matrix)
-
     task.save_output(output, args.output_folder_path)
 
 # TODO: Sorting issue

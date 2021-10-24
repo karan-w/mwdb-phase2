@@ -117,8 +117,12 @@ class Task2:
             drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
             drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes['k_principal_components_eigen_vectors'].real.tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
-        
+            print(np.shape(drt_attributes['reduced_dataset_feature_vector']))
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
+
+
+
+
             # TODO: Complete after SVD implementation
             # print(drt_attributes.keys())
             pass
@@ -159,8 +163,10 @@ class Task2:
                 types.append(str(j))
                 weights.append(type_weight_matrix[j][i])
             type_weight_pairs['Latent Semantic'] = i
-            type_weight_pairs['Weights'] = [x for _,x in sorted(zip(types,weights), reverse=True)]
-            type_weight_pairs['Types'] = [x for x,_ in sorted(zip(types,weights), reverse=True)]
+
+            type_weight_pairs['Weights'] = [x for x, _ in sorted(zip(weights, types), reverse=True)]
+            type_weight_pairs['Types'] = [x for _, x in sorted(zip(weights, types), reverse=True)]
+
             sorted_type_weight_matrix.append(type_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
