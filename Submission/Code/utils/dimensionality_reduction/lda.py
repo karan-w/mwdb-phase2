@@ -1,5 +1,6 @@
 from utils.feature_vector import FeatureVector
 from sklearn import decomposition
+import numpy as np
 
 class LatentDirichletAllocation:
     def __init__(self) -> None:
@@ -14,6 +15,7 @@ class LatentDirichletAllocation:
         latent_dirichlet_allocation.fit(dataset_feature_vector)
         reduced_dataset_feature_vector = latent_dirichlet_allocation.transform(dataset_feature_vector)
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
+        attributes['components'] = latent_dirichlet_allocation.components_.tolist()
         return reduced_dataset_feature_vector, attributes # 400 * k
 
     def compute_subject_LDA(self, subjects_similarity_matrix, k):
@@ -29,3 +31,9 @@ class LatentDirichletAllocation:
         reduced_dataset_feature_vector, attributes = self.compute_LDA(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images, attributes
+
+    def compute_reprojection(self, images, components):
+        dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+        reduced_dataset_feature_vector = np.dot(dataset_feature_vector, components.T)
+        images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
+        return images

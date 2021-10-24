@@ -89,7 +89,7 @@ class Task5:
     if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
       return PrincipalComponentAnalysis().compute_reprojection(images, reproject_array)
     elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-      return SingularValueDecomposition().compute(images, reproject_array)
+      return SingularValueDecomposition().compute_reprojection(images, reproject_array)
     elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
       return LatentDirichletAllocation().compute_reprojection(images, reproject_array)
     elif dimensionality_reduction_technique == KMEANS:
@@ -130,13 +130,8 @@ if __name__ == "__main__":
     reproject_matrix = np.array(attributes['centroids'])
   elif dr_technique == LATENT_DIRICHLET_ALLOCATION:
     reproject_matrix = np.array(attributes['components'])
-  # elif feature_model == HISTOGRAM_OF_GRADIENTS:
-  #   reproject_matrix = np.array(attributes[''])
-
-  # print(len(reproject_matrix), len(reproject_matrix[0]))
-
-  # if feature_model == KMEANS:
-  #   reproject_matrix = np.array(attributes['centroids'])
+  elif dr_technique == SINGULAR_VALUE_DECOMPOSITION:
+    reproject_matrix = np.array(attributes['right_factor_matrix'])
 
   query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
 
