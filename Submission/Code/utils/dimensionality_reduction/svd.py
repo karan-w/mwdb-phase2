@@ -37,7 +37,10 @@ class SingularValueDecomposition:
         attributes = {}
         left_factor_matrix, core_matrix, right_factor_matrix = self.svd(dataset_feature_vector, k)
 
-        print(left_factor_matrix.shape, core_matrix.shape, right_factor_matrix.shape)
+        #LeftFactorMatrix - nxk, Core matrix - kxk, RightFactorMatrix - kxm
+        #left_factor_matrix, core_matrix, right_factor_matrix = svd(dataset_feature_vector)
+
+        # print(left_factor_matrix.shape, core_matrix.shape, right_factor_matrix.shape)
         # Reduce the core matrix 
 
         # reduced_core_matrix = np.zeros((dataset_feature_vector.shape[0], dataset_feature_vector.shape[1])) # n * m
