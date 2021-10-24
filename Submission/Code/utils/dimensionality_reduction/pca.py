@@ -41,9 +41,12 @@ class PrincipalComponentAnalysis:
         k_principal_components_eigen_vectors = sorted_eigenvectors[:,0:k]
         attributes['k_principal_components_eigen_vectors'] = k_principal_components_eigen_vectors
 
+        print("k principal comp ",np.shape(k_principal_components_eigen_vectors))
+
         reduced_dataset_feature_vector = np.dot(dataset_feature_vector, k_principal_components_eigen_vectors) # (400, 1764) * (1764, 2)
         attributes['reduced_dataset_feature_vector'] = reduced_dataset_feature_vector
 
+        print("reduced dataset fv ",reduced_dataset_feature_vector)
         return reduced_dataset_feature_vector, attributes
 
     def compute_subject_PCA(self, subjects_similarity_matrix, k):
@@ -56,8 +59,12 @@ class PrincipalComponentAnalysis:
 
     def compute(self, images, k):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+
+        print("dataset feature vector ",np.shape(dataset_feature_vector))
+
         reduced_dataset_feature_vector, attributes = self.compute_PCA(dataset_feature_vector, k)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
+        print("reduced dataset feature vector ", np.shape(dataset_feature_vector))
         return images, attributes
 
     def compute2(self,object_feature_vector,k):
@@ -65,6 +72,9 @@ class PrincipalComponentAnalysis:
         return reduced_dataset_feature_vector
     def compute_reprojection(self, images, k_principal_components_eigen_vectors):
         dataset_feature_vector = FeatureVector().create_dataset_feature_vector(images)
+
+        print(np.shape(dataset_feature_vector))
+        print(np.shape(k_principal_components_eigen_vectors))
         reduced_dataset_feature_vector = np.dot(dataset_feature_vector, k_principal_components_eigen_vectors) # (400, 1764) * (1764, 2)
         images = FeatureVector().assign_images_reduced_feature_vector(images, reduced_dataset_feature_vector)
         return images

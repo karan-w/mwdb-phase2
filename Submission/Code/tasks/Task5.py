@@ -115,6 +115,10 @@ if __name__ == "__main__":
   query_image = image_reader.get_query_image(args.query_image)
   dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
 
+  print("init query img",np.shape(query_image.matrix))
+  print("init dataset", np.shape(dataset[2].matrix))
+
+
   metadata, attributes = task.read_latent_semantics(args.latent_semantics_file)
 
   feature_model = metadata['model']
@@ -122,6 +126,9 @@ if __name__ == "__main__":
 
   query_image = task.compute_query_feature(feature_model, query_image)
   dataset = task.compute_feature_vectors(feature_model, dataset)
+
+  print("after feature extr query img", np.shape(query_image.matrix))
+  print("after feature extr dataset", np.shape(dataset[2].matrix))
 
   reproject_matrix = None
   if dr_technique == PRINCIPAL_COMPONENT_ANALYSIS:
@@ -133,14 +140,24 @@ if __name__ == "__main__":
   elif dr_technique == SINGULAR_VALUE_DECOMPOSITION:
     reproject_matrix = np.array(attributes['right_factor_matrix'])
 
+  # print("query image ", np.shape(query_image))
+
   query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
+
+  print("query image ",np.shape(query_image[0].reduced_feature_vector))
+  print("reproject matrix ", np.shape(reproject_matrix))
+
+  print("data set ", np.shape(dataset[0].matrix))
 
   dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
 
+  print("data set after dimension red. ", np.shape(dataset[0].reduced_feature_vector))
+  print("data set after dimension red. ", np.shape(dataset))
+
   dataset = task.similarity(query_image, dataset)
+
+
 
   dataset.sort(key=lambda d: d.similarity) 
 
   print([[dataset[i].filename, dataset[i].similarity] for i in range(args.n)])
-
-

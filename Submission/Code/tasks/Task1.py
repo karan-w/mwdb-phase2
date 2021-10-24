@@ -29,7 +29,9 @@ LATENT_DIRICHLET_ALLOCATION = 'LDA'
 KMEANS = 'kmeans'
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+
 
 class Task1:
     def __init__(self):
@@ -38,13 +40,16 @@ class Task1:
     def setup_args_parser(self):
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS], required=True)
+        parser.add_argument('--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS],
+                            required=True)
         parser.add_argument('--x', type=str, required=True)
         parser.add_argument('--k', type=int, required=True)
-        parser.add_argument('--dimensionality_reduction_technique', type=str, choices=[PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION, LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
+        parser.add_argument('--dimensionality_reduction_technique', type=str,
+                            choices=[PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION,
+                                     LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
         parser.add_argument('--images_folder_path', type=str, required=True)
         parser.add_argument('--output_folder_path', type=str, required=True)
-        
+
         return parser
 
     def log_args(self, args):
@@ -91,11 +96,11 @@ class Task1:
 
         subjects = []
 
-        # Group images for each distinct subject_id 
+        # Group images for each distinct subject_id
         for subject_id in subject_ids:
             subject_images = []
             for image in images:
-                if(image.subject_id == subject_id):
+                if (image.subject_id == subject_id):
                     subject_images.append(image)
             subject = Subject(subject_images)
             subject.create_subject_feature_vector(subject.images)
@@ -109,31 +114,34 @@ class Task1:
         return FeatureVector().create_subjects_reduced_feature_vector(subjects)
 
     def preprocess_drt_attributes_for_output(self, dimensionality_reduction_technique, drt_attributes):
-        if(dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS):
+        if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
             # dataset_feature_vector, standardized_dataset_feature_vector, eigen_values, eigen_vectors, k_principal_components_eigen_vectors
-            # drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
-            # drt_attributes['standardized_dataset_feature_vector'] = drt_attributes['standardized_dataset_feature_vector'].real.tolist()
-            # drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
-            # drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
-            drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes['k_principal_components_eigen_vectors'].real.tolist()
-            drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
-        
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
+            drt_attributes['standardized_dataset_feature_vector'] = drt_attributes[
+                'standardized_dataset_feature_vector'].real.tolist()
+            drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
+            drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
+            drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes[
+                'k_principal_components_eigen_vectors'].real.tolist()
+            drt_attributes['reduced_dataset_feature_vector'] = drt_attributes[
+                'reduced_dataset_feature_vector'].real.tolist()
+
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
             # TODO: Complete after SVD implementation
             # print(drt_attributes.keys())
             pass
-        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION: 
+        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
             # dataset_feature_vector, reduced_dataset_feature_vector
             drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
 
 
-        elif dimensionality_reduction_technique == KMEANS: 
+        elif dimensionality_reduction_technique == KMEANS:
             # dataset_feature_vector, centroids, reduced_dataset_feature_vector
-            # drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
             drt_attributes['centroids'] = drt_attributes['centroids'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
-        
+
         return drt_attributes
 
     def build_output(self, args, images, drt_attributes, subjects, subject_weight_matrix):
@@ -147,7 +155,8 @@ class Task1:
             subject.feature_vector = subject.feature_vector.real.tolist()
             subject.reduced_feature_vector = subject.reduced_feature_vector.real.tolist()
 
-        drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique, drt_attributes)
+        drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique,
+                                                                   drt_attributes)
 
         subject_weight_matrix = subject_weight_matrix.real.tolist()
 
@@ -160,10 +169,8 @@ class Task1:
                 subjects.append(str(j))
                 weights.append(subject_weight_matrix[j][i])
             subject_weight_pairs['Latent Semantic'] = i
-
-            subject_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,subjects), reverse=True)]
-            subject_weight_pairs['Subjects'] = [x for _,x in sorted(zip(weights,subjects), reverse=True)]
-
+            subject_weight_pairs['Weights'] = [x for _, x in sorted(zip(subjects, weights), reverse=True)]
+            subject_weight_pairs['Subjects'] = [x for x, _ in sorted(zip(subjects, weights), reverse=True)]
             sorted_subject_weight_matrix.append(subject_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -177,18 +184,21 @@ class Task1:
                 'images_folder_path': args.images_folder_path,
                 'output_folder_path': args.output_folder_path
             },
-            # 'images': images,
+            'images': images,
             'subjects': subjects,
-            'drt_attributes': drt_attributes, 
+            'drt_attributes': drt_attributes,
             'subject_weight_matrix': sorted_subject_weight_matrix
         }
         return output
 
     def save_output(self, output, output_folder_path):
         OUTPUT_FILE_NAME = 'output.json'
-        timestamp_folder_path = Output().create_timestamp_folder(output_folder_path) # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
-        output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
+        timestamp_folder_path = Output().create_timestamp_folder(
+            output_folder_path)  # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
+        output_json_path = os.path.join(timestamp_folder_path,
+                                        OUTPUT_FILE_NAME)  # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
         Output().save_dict_as_json_file(output, output_json_path)
+
 
 if __name__ == "__main__":
     task = Task1()
@@ -203,7 +213,7 @@ if __name__ == "__main__":
     images = image_reader.get_images_by_subjects(args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)
-    
+
     # drt = dimensionality reduction technique
     images, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, images, args.k)
 
@@ -213,5 +223,5 @@ if __name__ == "__main__":
 
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
 
-    # TODO: Sorted subjects for each weight 
+    # TODO: Sorted subjects for each weight
     task.save_output(output, args.output_folder_path)

@@ -214,6 +214,6 @@ if __name__ == "__main__":
     type_weight_matrix = task.compute_type_weight_matrix(types)
 
     output = task.build_output(args, images, drt_attributes, types, type_weight_matrix)
-    print(output)
+    # print(output)
     # TODO: Sorted subjects for each weight 
-    # task.save_output(output, args.output_folder_path)
+    task.save_output(output, args.output_folder_path)
