@@ -88,7 +88,7 @@ class Task6:
     with open(latent_semantics_file, 'r') as f:
       latent_semantics = json.load(f)
 
-    return latent_semantics['args'], latent_semantics['drt_attributes'], latent_semantics['images']
+    return latent_semantics['args'], latent_semantics['drt_attributes'], latent_semantics['type_weight_matrix']
 
   def reduce_dimensions(self, dimensionality_reduction_technique, images, reproject_array):
     if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
@@ -108,6 +108,26 @@ class Task6:
       image['similarity'] = 1 / (1 + distance)
     return dataset
 
+  def compute_similarity_matrix(self, reduced_query_feature_vector, matrix):
+    similarity_matrix = {}
+    for key in matrix.keys():
+      distance = cityblock(reduced_query_feature_vector, matrix[key])
+      similarity = 1 / (1 + distance)
+      similarity_matrix[key] = similarity
+    return similarity_matrix
+
+  def compute_type_weight_matrix(self, type_weight_matrix):
+    matrix = {}
+    for i in range(len(type_weight_matrix)):
+      for j in range(len(type_weight_matrix[i]['Types'])):
+        types = type_weight_matrix[i]['Types'][j]
+        weights = type_weight_matrix[i]['Weights'][j]
+        if types in matrix:
+          matrix[types] = np.append(matrix[types], weights)
+        else:
+          matrix[types] = np.array([weights])
+    return matrix
+
 if __name__ == "__main__":
   task = Task6()
   parser = task.setup_args_parser()
@@ -120,13 +140,15 @@ if __name__ == "__main__":
 
   query_image = image_reader.get_query_image(args.query_image)
 
-  metadata, attributes, images = task.read_latent_semantics(args.latent_semantics_file)
+  metadata, attributes, type_weight_matrix = task.read_latent_semantics(args.latent_semantics_file)
 
   feature_model = metadata['model']
   drt_technique = metadata['dimensionality_reduction_technique']
 
   print("Latent Semantic Feature Model: " + feature_model)
   print("Latent Semantic Dimensionality Reduction Technique: " + drt_technique)
+
+  matrix = task.compute_type_weight_matrix(type_weight_matrix)
 
   query_image = task.compute_query_feature(feature_model, query_image)
 
@@ -135,13 +157,19 @@ if __name__ == "__main__":
   reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
   reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
+
+  similarity_matrix = task.compute_similarity_matrix(reduced_query_feature_vector, matrix)
   
-  similarity_with_query_image = task.compute_similarity(reduced_query_feature_vector, images)
+  # similarity_with_query_image = task.compute_similarity(reduced_query_feature_vector, images)
 
-  sorted_images = sorted(similarity_with_query_image, key=lambda d: d['similarity'], reverse=True) 
+  # sorted_types = sorted(similarity_with_query_image, key=lambda d: d['similarity'], reverse=True) 
 
-  n = 10
+  sorted_types = sorted(similarity_matrix.items(), key=lambda x:x[1], reverse=True)
 
-  types = [sorted_images[i]['image_type'] for i in range(n)]
-  print(f"The top {n} similar images are: ", types)
-  print('Predicted type of image: ' + Counter(types).most_common(1)[0][0])
+  print(sorted_types[0])
+
+  # n = 10
+
+  # types = [sorted_images[i]['image_type'] for i in range(n)]
+  # print(f"The top {n} similar images are: ", types)
+  # print('Predicted type of image: ' + Counter(types).most_common(1)[0][0])
