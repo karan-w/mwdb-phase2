@@ -48,7 +48,6 @@ class Task7:
 
         parser.add_argument('--query_image', type=str)
         parser.add_argument('--latent_semantics_file', type=str, required=True)
-        # parser.add_argument('--n', type=int, required=True)
         parser.add_argument('--images_folder_path', type=str, required=True)
         parser.add_argument('--output_folder_path', type=str, required=True)
 
@@ -58,19 +57,8 @@ class Task7:
         logger.debug("Received the following arguments.")
         logger.debug(f'query_image - {args.query_image}')
         logger.debug(f'latent_semantics_file - {args.latent_semantics_file}')
-        # logger.debug(f'n - {args.n}')
         logger.debug(f'images_folder_path - {args.images_folder_path}')
         logger.debug(f'output_folder_path - {args.output_folder_path}')
-
-    def compute_feature_vectors(self, feature_model, images):
-        if feature_model == COLOR_MOMENTS:
-            return ColorMoments().compute(images)
-        elif feature_model == EXTENDED_LBP:
-            return ExtendedLocalBinaryPattern().compute(images)
-        elif feature_model == HISTOGRAM_OF_GRADIENTS:
-            return HistogramOfGradients().compute(images)
-        else:
-            raise Exception(f"Unknown feature model - {feature_model}")
 
     def compute_query_feature(self, feature_model, image):
         if feature_model == COLOR_MOMENTS:
@@ -83,11 +71,24 @@ class Task7:
         else:
             raise Exception(f"Unknown feature model - {feature_model}")
 
+    def compute_reprojection_matrix(self, drt_technique):
+        reproject_matrix = None
+        if drt_technique == PRINCIPAL_COMPONENT_ANALYSIS:
+            reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
+        elif drt_technique == KMEANS:
+            reproject_matrix = np.array(attributes['centroids'])
+        elif drt_technique == LATENT_DIRICHLET_ALLOCATION:
+            reproject_matrix = np.array(attributes['components'])
+        elif drt_technique == SINGULAR_VALUE_DECOMPOSITION:
+            reproject_matrix = np.array(attributes['right_factor_matrix'])
+
+        return reproject_matrix
+
     def read_latent_semantics(self, latent_semantics_file):
         with open(latent_semantics_file, 'r') as f:
             latent_semantics = json.load(f)
 
-        return latent_semantics['args'], latent_semantics['drt_attributes']
+        return latent_semantics['args'], latent_semantics['drt_attributes'], latent_semantics['subject_weight_matrix']
 
     def reduce_dimensions(self, dimensionality_reduction_technique, images, reproject_array):
         if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
@@ -101,13 +102,34 @@ class Task7:
         else:
             raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
+    def compute_similarity_matrix(self, reduced_query_feature_vector, matrix):
+        similarity_matrix = {}
+        for key in matrix.keys():
+            distance = cityblock(reduced_query_feature_vector, matrix[key])
+            similarity = 1 / (1 + distance)
+            similarity_matrix[key] = similarity
+        return similarity_matrix
+    
+    def compute_subject_weight_matrix(self, subject_weight_matrix):
+        matrix = {}
+        for i in range(len(subject_weight_matrix)):
+            for j in range(len(subject_weight_matrix[i]['Subjects'])):
+                subjects = subject_weight_matrix[i]['Subjects'][j]
+                weights = subject_weight_matrix[i]['Weights'][j]
+                if subjects in matrix:
+                    matrix[subjects] = np.append(matrix[subjects], weights)
+                else:
+                    matrix[subjects] = np.array([weights])
+
+        return matrix
+
     def similarity(self, query_image, dataset):
         for image in dataset:
             image.similarity = cityblock(image.reduced_feature_vector, query_image[0].reduced_feature_vector)
         return dataset
 
 
-if __name__ == "__main__":
+def main():
     task = Task7()
     parser = task.setup_args_parser()
 
@@ -120,42 +142,39 @@ if __name__ == "__main__":
     query_image = image_reader.get_query_image(args.query_image)
     dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
 
-    metadata, attributes = task.read_latent_semantics(args.latent_semantics_file)
+    metadata, attributes, subject_weight_matrix = task.read_latent_semantics(args.latent_semantics_file)
 
     feature_model = metadata['model']
-    dr_technique = metadata['dimensionality_reduction_technique']
+    drt_technique = metadata['dimensionality_reduction_technique']
+
+    subject_weight_matrix = task.compute_subject_weight_matrix(subject_weight_matrix    )
 
     query_image = task.compute_query_feature(feature_model, query_image)
-    dataset = task.compute_feature_vectors(feature_model, dataset)
 
-    reproject_matrix = None
-    if dr_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-        reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
-    elif dr_technique == KMEANS:
-        reproject_matrix = np.array(attributes['centroids'])
-    elif dr_technique == LATENT_DIRICHLET_ALLOCATION:
-        reproject_matrix = np.array(attributes['components'])
-    elif dr_technique == SINGULAR_VALUE_DECOMPOSITION:
-        reproject_matrix = np.array(attributes['right_factor_matrix'])
+    query_image = np.reshape(query_image, (1, -1))
 
-    query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
+    #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
+    reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
-    dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
-    dataset = task.similarity(query_image, dataset)
-    dataset.sort(key=lambda d: d.similarity)
+    reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
 
-    cnt=0
-    subs=[]
-    n_sim=10
-    for i in range(n_sim):
-        sub = dataset[i].filename.split("-")[2]
-        print(sub)
-        subs.append(sub)
-        if sub=="1":
-            cnt+=1
+    similarity_matrix = task.compute_similarity_matrix(reduced_query_feature_vector, subject_weight_matrix)
 
-    print(list(map(lambda t: {"sub": t, "percent": subs.count(t) * 100/n_sim}, set(subs))))
-    print(sorted(list(map(lambda t: {"sub":t,"percent":subs.count(t)* 100/n_sim}, set(subs))),key=lambda d:d["percent"],reverse=True)[0])
+    sorted_types = sorted(similarity_matrix.items(), key=lambda x:x[1], reverse=True)
+
+    print('Associated subject ID (Y): ' + sorted_types[0][0])
+    # cnt=0
+    # subs=[]
+    # n_sim=10
+    # for i in range(n_sim):
+    #     sub = dataset[i].filename.split("-")[2]
+    #     print(sub)
+    #     subs.append(sub)
+    #     if sub=="1":
+    #         cnt+=1
+
+    # print(list(map(lambda t: {"sub": t, "percent": subs.count(t) * 100/n_sim}, set(subs))))
+    # print(sorted(list(map(lambda t: {"sub":t,"percent":subs.count(t)* 100/n_sim}, set(subs))),key=lambda d:d["percent"],reverse=True)[0])
 
     # n = 10
     #
@@ -166,10 +185,10 @@ if __name__ == "__main__":
 
     # print(list(map(lambda t: types.count(t), set(types))))
 
-
-
-
     # print([[dataset[i].filename, dataset[i].similarity] for i in range(args.n)])
+
+if __name__ == "__main__":
+    main()
 
 
 

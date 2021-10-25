@@ -4,7 +4,7 @@
 model=ELBP
 subject_id=5
 k_value=4
-dimensionality_reduction_technique=PCA
+dimensionality_reduction_technique=SVD
 images_folder_path="/Users/harshilgandhi/Documents/MWDB_Project/mwdb-phase2/data"
 output_folder_path="/Users/harshilgandhi/Documents/MWDB_Project/mwdb-phase2/Submission/Outputs/Task2"
 

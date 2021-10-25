@@ -26,6 +26,7 @@ class Task9:
         parser.add_argument('--output_folder_path', type=str, required=True)
         
         return parser
+        
     def Create_Similarity_Graph(self,Subjects,val,df,n=None):
         Created_Graph = nx.DiGraph()
         for x in Subjects:
@@ -102,7 +103,7 @@ class Task9:
         }
         return output
 
-if __name__ == "__main__":
+def main():
     task = Task9()
     parser = task.setup_args_parser()
     args = parser.parse_args()
@@ -128,3 +129,6 @@ if __name__ == "__main__":
     output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
     Output().save_dict_as_json_file(output, output_json_path)
     task.Draw_Graph(n_Similarity_Graph,timestamp_folder_path)
+
+if __name__ == "__main__":
+    main()

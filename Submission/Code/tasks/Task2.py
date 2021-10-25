@@ -119,9 +119,9 @@ class Task2:
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
         
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
-            # TODO: Complete after SVD implementation
-            # print(drt_attributes.keys())
-            pass
+            #right_factor_matrix (V_t)
+            drt_attributes['right_factor_matrix'] = drt_attributes['right_factor_matrix'].tolist()
+            
         elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION: 
             # dataset_feature_vector, reduced_dataset_feature_vector
             drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
@@ -187,7 +187,7 @@ class Task2:
         output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
         Output().save_dict_as_json_file(output, output_json_path)
 
-if __name__ == "__main__":
+def main():
     task = Task2()
     parser = task.setup_args_parser()
 
@@ -211,3 +211,6 @@ if __name__ == "__main__":
     output = task.build_output(args, images, drt_attributes, types, type_weight_matrix)
     
     task.save_output(output, args.output_folder_path)
+
+if __name__ == "__main__":
+    main()

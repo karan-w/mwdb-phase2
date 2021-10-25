@@ -106,7 +106,7 @@ class Task5:
       image['similarity'] = 1 / (1 + distance)
     return dataset
 
-if __name__ == "__main__":
+def main():
   task = Task5()
   parser = task.setup_args_parser()
 
@@ -129,7 +129,8 @@ if __name__ == "__main__":
   query_image = task.compute_query_feature_vector(feature_model, query_image)
 
   query_image = np.reshape(query_image, (1, -1))
-  #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
+
+  #collecting the reprojection matrix (1 x m) to reduce (or project) query image onto latent space
   reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
   reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
@@ -149,3 +150,6 @@ if __name__ == "__main__":
     plt.imshow(image, cmap='gray')
     plt.title(most_n_similar_images[i][0])
     plt.show()
+
+if __name__ == "__main__":
+  main()

@@ -47,7 +47,6 @@ class Task6:
 
     parser.add_argument('--query_image', type=str)
     parser.add_argument('--latent_semantics_file', type=str, required=True)
-    parser.add_argument('--n', type=int, required=True)
     parser.add_argument('--images_folder_path', type=str, required=True)
     parser.add_argument('--output_folder_path', type=str, required=True)
     
@@ -57,7 +56,6 @@ class Task6:
     logger.debug("Received the following arguments.")
     logger.debug(f'query_image - {args.query_image}')
     logger.debug(f'latent_semantics_file - {args.latent_semantics_file}')
-    logger.debug(f'n - {args.n}')
     logger.debug(f'images_folder_path - {args.images_folder_path}')
     logger.debug(f'output_folder_path - {args.output_folder_path}')
 
@@ -126,9 +124,10 @@ class Task6:
           matrix[types] = np.append(matrix[types], weights)
         else:
           matrix[types] = np.array([weights])
+
     return matrix
 
-if __name__ == "__main__":
+def main():
   task = Task6()
   parser = task.setup_args_parser()
 
@@ -148,17 +147,18 @@ if __name__ == "__main__":
   print("Latent Semantic Feature Model: " + feature_model)
   print("Latent Semantic Dimensionality Reduction Technique: " + drt_technique)
 
-  matrix = task.compute_type_weight_matrix(type_weight_matrix)
+  type_weight_matrix = task.compute_type_weight_matrix(type_weight_matrix)
 
   query_image = task.compute_query_feature(feature_model, query_image)
 
   query_image = np.reshape(query_image, (1, -1))
+
   #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
   reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
   reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
 
-  similarity_matrix = task.compute_similarity_matrix(reduced_query_feature_vector, matrix)
+  similarity_matrix = task.compute_similarity_matrix(reduced_query_feature_vector, type_weight_matrix)
   
   # similarity_with_query_image = task.compute_similarity(reduced_query_feature_vector, images)
 
@@ -166,10 +166,13 @@ if __name__ == "__main__":
 
   sorted_types = sorted(similarity_matrix.items(), key=lambda x:x[1], reverse=True)
 
-  print(sorted_types[0])
+  print('Associated type label (X): ' + sorted_types[0][0])
 
   # n = 10
 
   # types = [sorted_images[i]['image_type'] for i in range(n)]
   # print(f"The top {n} similar images are: ", types)
   # print('Predicted type of image: ' + Counter(types).most_common(1)[0][0])
+
+if __name__ == "__main__":
+  main()
