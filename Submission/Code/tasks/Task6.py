@@ -61,26 +61,28 @@ class Task6:
     logger.debug(f'images_folder_path - {args.images_folder_path}')
     logger.debug(f'output_folder_path - {args.output_folder_path}')
 
-  # def compute_feature_vectors(self, feature_model, images):
-  #   if feature_model == COLOR_MOMENTS:
-  #     return ColorMoments().compute(images)
-  #   elif feature_model == EXTENDED_LBP:
-  #     return ExtendedLocalBinaryPattern().compute(images)
-  #   elif feature_model == HISTOGRAM_OF_GRADIENTS:
-  #     return HistogramOfGradients().compute(images)
-  #   else:
-  #     raise Exception(f"Unknown feature model - {feature_model}")
-
   def compute_query_feature(self, feature_model, image):
     if feature_model == COLOR_MOMENTS:
       return ColorMoments().get_color_moments_fd(image.matrix)
     elif feature_model == EXTENDED_LBP:
       return ExtendedLocalBinaryPattern().get_elbp_fd(image.matrix)
     elif feature_model == HISTOGRAM_OF_GRADIENTS:
-      image.feature_vector = HistogramOfGradients().get_hog_fd(image.matrix)
-      return image
+      return HistogramOfGradients().get_hog_fd(image.matrix)
     else:
       raise Exception(f"Unknown feature model - {feature_model}")
+
+  def compute_reprojection_matrix(self, drt_technique):
+    reproject_matrix = None
+    if drt_technique == PRINCIPAL_COMPONENT_ANALYSIS:
+      reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
+    elif drt_technique == KMEANS:
+      reproject_matrix = np.array(attributes['centroids'])
+    elif drt_technique == LATENT_DIRICHLET_ALLOCATION:
+      reproject_matrix = np.array(attributes['components'])
+    elif drt_technique == SINGULAR_VALUE_DECOMPOSITION:
+      reproject_matrix = np.array(attributes['right_factor_matrix'])
+
+    return reproject_matrix
 
   def read_latent_semantics(self, latent_semantics_file):
     with open(latent_semantics_file, 'r') as f:
@@ -100,9 +102,10 @@ class Task6:
     else:
       raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
-  def similarity(self, query_image, dataset):
+  def compute_similarity(self, reduced_query_feature_vector, dataset):
     for image in dataset:
-      image['similarity'] = euclidean(image['reduced_feature_vector'], query_image[0].reduced_feature_vector)
+      distance = cityblock(reduced_query_feature_vector, image['reduced_feature_vector'])
+      image['similarity'] = 1 / (1 + distance)
     return dataset
 
 if __name__ == "__main__":
@@ -116,44 +119,29 @@ if __name__ == "__main__":
   image_reader = ImageReader()
 
   query_image = image_reader.get_query_image(args.query_image)
-  # dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
 
   metadata, attributes, images = task.read_latent_semantics(args.latent_semantics_file)
 
   feature_model = metadata['model']
-  dr_technique = metadata['dimensionality_reduction_technique']
+  drt_technique = metadata['dimensionality_reduction_technique']
+
+  print("Latent Semantic Feature Model: " + feature_model)
+  print("Latent Semantic Dimensionality Reduction Technique: " + drt_technique)
 
   query_image = task.compute_query_feature(feature_model, query_image)
-  # dataset = task.compute_feature_vectors(feature_model, dataset)
 
-  reproject_matrix = None
-  if dr_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-    reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
-  elif dr_technique == KMEANS:
-    reproject_matrix = np.array(attributes['centroids'])
-  elif dr_technique == LATENT_DIRICHLET_ALLOCATION:
-    reproject_matrix = np.array(attributes['components'])
-  elif dr_technique == SINGULAR_VALUE_DECOMPOSITION:
-    reproject_matrix = np.array(attributes['right_factor_matrix'])
+  query_image = np.reshape(query_image, (1, -1))
+  #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
+  reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
 
-  query_image = task.reduce_dimensions(dr_technique, [query_image], reproject_matrix)
+  reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
+  
+  similarity_with_query_image = task.compute_similarity(reduced_query_feature_vector, images)
 
-  # dataset = task.reduce_dimensions(dr_technique, dataset, reproject_matrix)
+  sorted_images = sorted(similarity_with_query_image, key=lambda d: d['similarity'], reverse=True) 
 
-  dataset = task.similarity(query_image, images)
-
-  dataset.sort(key=lambda d: d['similarity']) 
-
-  # print([[dataset[i]['filename'], dataset[i]['similarity']] for i in range(args.n)])
   n = 10
 
-  types = [dataset[i]['image_type'] for i in range(n)]
-  print(Counter(types))
-  print(Counter(types).most_common(1)[0][0])
-
-  # for i in range(args.n):
-  #   image = cv2.imread(args.images_folder_path + "\\" + dataset[i]['filename'], cv2.IMREAD_GRAYSCALE)
-  #   plt.figure()
-  #   plt.imshow(image)
-  #   plt.title(str(dataset[i]['similarity']) + " " + dataset[i]['filename'])
-  #   plt.show()
+  types = [sorted_images[i]['image_type'] for i in range(n)]
+  print(f"The top {n} similar images are: ", types)
+  print('Predicted type of image: ' + Counter(types).most_common(1)[0][0])
