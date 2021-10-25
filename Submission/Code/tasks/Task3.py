@@ -13,7 +13,6 @@ from sklearn.datasets import fetch_olivetti_faces
 from scipy.linalg import svd
 from numpy import dot
 from sklearn.decomposition import LatentDirichletAllocation
-from gensim.models import LdaModel
 import json
 import logging
 import argparse

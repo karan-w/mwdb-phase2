@@ -127,6 +127,11 @@ class Task7:
             image.similarity = cityblock(image.reduced_feature_vector, query_image[0].reduced_feature_vector)
         return dataset
 
+    def Generate_Output(self,Subject_ID):
+        output = {
+            'Associated subject ID (Y) for the Query Image: ' : Subject_ID,
+        }
+        return output
 
 def main():
     task = Task7()
@@ -162,6 +167,12 @@ def main():
     sorted_types = sorted(similarity_matrix.items(), key=lambda x:x[1], reverse=True)
 
     print('Associated subject ID (Y): ' + sorted_types[0][0])
+    output = task.Generate_Output(sorted_types[0][0])
+    
+    OUTPUT_FILE_NAME = 'output.json'
+    timestamp_folder_path = Output().create_timestamp_folder(args.output_folder_path) # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
+    output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
+    Output().save_dict_as_json_file(output, output_json_path)
     # cnt=0
     # subs=[]
     # n_sim=10
