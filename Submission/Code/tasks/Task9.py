@@ -90,8 +90,8 @@ class Task9:
         Top_Subjects = []
         Index_Subject = 'Top {0} Subjects'.format(n-1)
         for i in Subjects:
-            Top_n_Subjects = dict.fromkeys(['Node', Index_Subject])
-            Top_n_Subjects['Node'] = i
+            Top_n_Subjects = dict.fromkeys(['Subject', Index_Subject])
+            Top_n_Subjects['Subject'] = i
             Top_n_Subjects[Index_Subject] = ((np.array(Computed_Ranked_Matrix.loc[i]))[1:n]).tolist()
             Top_Subjects.append(Top_n_Subjects)
         # print(Top_Subjects)l3 = [x for x in l1 if x not in l2]
