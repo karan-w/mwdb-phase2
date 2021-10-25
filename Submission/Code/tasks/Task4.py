@@ -209,8 +209,7 @@ def main():
     subject_weight_matrix, drt_attributes = task.reduce_dimensions(
         args.dimensionality_reduction_technique, subject_similarity_matrix, args.k)
 
-    output = task.build_output(args, images, drt_attributes,
-                               subjects, subject_weight_matrix, subject_similarity_matrix)
+    output = task.build_output(args, subjects, subject_weight_matrix, subject_similarity_matrix)
 
     task.save_output(output, args.output_folder_path)
 
