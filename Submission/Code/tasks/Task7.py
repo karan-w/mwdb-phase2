@@ -66,8 +66,7 @@ class Task7:
         elif feature_model == EXTENDED_LBP:
             return ExtendedLocalBinaryPattern().get_elbp_fd(image.matrix)
         elif feature_model == HISTOGRAM_OF_GRADIENTS:
-            image.feature_vector = HistogramOfGradients().get_hog_fd(image.matrix)
-            return image
+            return HistogramOfGradients().get_hog_fd(image.matrix)
         else:
             raise Exception(f"Unknown feature model - {feature_model}")
 
