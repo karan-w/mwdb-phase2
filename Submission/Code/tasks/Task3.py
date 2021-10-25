@@ -129,21 +129,10 @@ class Task3:
             for j in range(len(type_dist_matrix[1])):
                 type_similarity_matrix[i][j] = 1 - type_dist_matrix[i][j]
 
-                        # dist_dist_matrix = preprocessing.normalize(dist_dist_matrix.reshape(1, -1), axis=1)
-                        #
-                        # #reshaping back to 40 x 40 matrix
-                        # dist_dist_matrix = dist_dist_matrix.reshape(12, 12)
-                        #
-                        # #using 1-d_norm to calculate actual similairty
-                        # type_similarity_matrix = [[0 for x in range(12)] for y in range(12)]
-                        # for i in range(len(dist_dist_matrix[0])):
-                        #     for j in range(len(dist_dist_matrix[1])):
-                        #         type_similarity_matrix[i][j] = 1 - dist_dist_matrix[i][j]
-                        #
-                        # #convert to numpy array
-                        # type_similarity_matrix = np.array(type_similarity_matrix)
+        #convert to numpy array
+        type_similarity_matrix = np.array(type_similarity_matrix)
     
-        return dist_dist_matrix
+        return type_similarity_matrix
 
     def reduce_dimensions(self, dimensionality_reduction_technique, type_similarity_matrix, k):
         if dimensionality_reduction_technique == PRINCIPAL_COMPONENT_ANALYSIS:
