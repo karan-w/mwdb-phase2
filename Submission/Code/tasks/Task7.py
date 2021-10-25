@@ -1,3 +1,9 @@
+from scipy.spatial.distance import euclidean
+from scipy.spatial.distance import cityblock
+import json
+import argparse
+import logging
+import os
 import sys
 from collections import Counter
 
@@ -5,25 +11,17 @@ import numpy as np
 
 sys.path.append(".")
 
-import os
-
-import logging
-import argparse
-import json
-from scipy.spatial.distance import cityblock
-from scipy.spatial.distance import euclidean
-
-from utils.image_reader import ImageReader
-from utils.feature_models.cm import ColorMoments
-from utils.feature_models.elbp import ExtendedLocalBinaryPattern
-from utils.feature_models.hog import HistogramOfGradients
-from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
-from utils.dimensionality_reduction.svd import SingularValueDecomposition
-from utils.dimensionality_reduction.lda import LatentDirichletAllocation
-from utils.dimensionality_reduction.kmeans import KMeans
-from utils.subject import Subject
-from utils.feature_vector import FeatureVector
 from utils.output import Output
+from utils.feature_vector import FeatureVector
+from utils.subject import Subject
+from utils.dimensionality_reduction.kmeans import KMeans
+from utils.dimensionality_reduction.lda import LatentDirichletAllocation
+from utils.dimensionality_reduction.svd import SingularValueDecomposition
+from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
+from utils.feature_models.hog import HistogramOfGradients
+from utils.feature_models.elbp import ExtendedLocalBinaryPattern
+from utils.feature_models.cm import ColorMoments
+from utils.image_reader import ImageReader
 
 COLOR_MOMENTS = 'CM'
 EXTENDED_LBP = 'ELBP'
@@ -73,7 +71,8 @@ class Task7:
     def compute_reprojection_matrix(self, drt_technique, attributes):
         reproject_matrix = None
         if drt_technique == PRINCIPAL_COMPONENT_ANALYSIS:
-            reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
+            reproject_matrix = np.array(
+                attributes['k_principal_components_eigen_vectors'])
         elif drt_technique == KMEANS:
             reproject_matrix = np.array(attributes['centroids'])
         elif drt_technique == LATENT_DIRICHLET_ALLOCATION:
@@ -99,7 +98,8 @@ class Task7:
         elif dimensionality_reduction_technique == KMEANS:
             return KMeans().compute_reprojection(images, reproject_array)
         else:
-            raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
+            raise Exception(
+                f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
     def compute_similarity_matrix(self, reduced_query_feature_vector, matrix):
         similarity_matrix = {}
@@ -108,7 +108,7 @@ class Task7:
             similarity = 1 / (1 + distance)
             similarity_matrix[key] = similarity
         return similarity_matrix
-    
+
     def compute_subject_weight_matrix(self, subject_weight_matrix):
         matrix = {}
         for i in range(len(subject_weight_matrix)):
@@ -124,14 +124,20 @@ class Task7:
 
     def similarity(self, query_image, dataset):
         for image in dataset:
-            image.similarity = cityblock(image.reduced_feature_vector, query_image[0].reduced_feature_vector)
+            image.similarity = cityblock(
+                image.reduced_feature_vector, query_image[0].reduced_feature_vector)
         return dataset
 
-    def Generate_Output(self,Subject_ID):
+    def save_output(self, output_folder_path, subject_id):
         output = {
-            'Associated subject ID (Y) for the Query Image: ' : Subject_ID,
+            'associated_subject_ID': subject_id
         }
-        return output
+        OUTPUT_FILE_NAME = 'output.json'
+        timestamp_folder_path = Output().create_timestamp_folder(output_folder_path)
+        output_json_path = os.path.join(
+            timestamp_folder_path, OUTPUT_FILE_NAME)
+        Output().save_dict_as_json_file(output, output_json_path)
+
 
 def main():
     task = Task7()
@@ -146,60 +152,36 @@ def main():
     query_image = image_reader.get_query_image(args.query_image)
     dataset = image_reader.get_all_images_in_folder(args.images_folder_path)
 
-    metadata, attributes, subject_weight_matrix = task.read_latent_semantics(args.latent_semantics_file)
+    metadata, attributes, subject_weight_matrix = task.read_latent_semantics(
+        args.latent_semantics_file)
 
     feature_model = metadata['model']
     drt_technique = metadata['dimensionality_reduction_technique']
 
-    subject_weight_matrix = task.compute_subject_weight_matrix(subject_weight_matrix    )
+    subject_weight_matrix = task.compute_subject_weight_matrix(
+        subject_weight_matrix)
 
     query_image = task.compute_query_feature(feature_model, query_image)
 
     query_image = np.reshape(query_image, (1, -1))
 
-    #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
-    reprojection_matrix = task.compute_reprojection_matrix(drt_technique, attributes)
+    # collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
+    reprojection_matrix = task.compute_reprojection_matrix(
+        drt_technique, attributes)
 
-    reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
+    reduced_query_feature_vector = task.reduce_dimensions(
+        drt_technique, query_image, reprojection_matrix)
 
-    similarity_matrix = task.compute_similarity_matrix(reduced_query_feature_vector, subject_weight_matrix)
+    similarity_matrix = task.compute_similarity_matrix(
+        reduced_query_feature_vector, subject_weight_matrix)
 
-    sorted_types = sorted(similarity_matrix.items(), key=lambda x:x[1], reverse=True)
+    sorted_types = sorted(similarity_matrix.items(),
+                          key=lambda x: x[1], reverse=True)
 
     print('Associated subject ID (Y): ' + sorted_types[0][0])
-    output = task.Generate_Output(sorted_types[0][0])
-    
-    OUTPUT_FILE_NAME = 'output.json'
-    timestamp_folder_path = Output().create_timestamp_folder(args.output_folder_path) # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
-    output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
-    Output().save_dict_as_json_file(output, output_json_path)
-    # cnt=0
-    # subs=[]
-    # n_sim=10
-    # for i in range(n_sim):
-    #     sub = dataset[i].filename.split("-")[2]
-    #     print(sub)
-    #     subs.append(sub)
-    #     if sub=="1":
-    #         cnt+=1
 
-    # print(list(map(lambda t: {"sub": t, "percent": subs.count(t) * 100/n_sim}, set(subs))))
-    # print(sorted(list(map(lambda t: {"sub":t,"percent":subs.count(t)* 100/n_sim}, set(subs))),key=lambda d:d["percent"],reverse=True)[0])
+    task.save_output(args.output_folder_path, sorted_types[0][0])
 
-    # n = 10
-    #
-    # subs = [dataset[i]['subject_id'] for i in range(n)]
-    # print(Counter(subs))
-    # print(Counter(subs).most_common(1)[0][0])
-
-
-    # print(list(map(lambda t: types.count(t), set(types))))
-
-    # print([[dataset[i].filename, dataset[i].similarity] for i in range(args.n)])
 
 if __name__ == "__main__":
     main()
-
-
-
-

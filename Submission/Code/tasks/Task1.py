@@ -1,23 +1,21 @@
+import argparse
+import logging
+import os
 import sys
 
 sys.path.append(".")
 
-import os
-
-import logging
-import argparse
-
-from utils.image_reader import ImageReader
-from utils.feature_models.cm import ColorMoments
-from utils.feature_models.elbp import ExtendedLocalBinaryPattern
-from utils.feature_models.hog import HistogramOfGradients
-from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
-from utils.dimensionality_reduction.svd import SingularValueDecomposition
-from utils.dimensionality_reduction.lda import LatentDirichletAllocation
-from utils.dimensionality_reduction.kmeans import KMeans
-from utils.subject import Subject
-from utils.feature_vector import FeatureVector
 from utils.output import Output
+from utils.feature_vector import FeatureVector
+from utils.subject import Subject
+from utils.dimensionality_reduction.kmeans import KMeans
+from utils.dimensionality_reduction.lda import LatentDirichletAllocation
+from utils.dimensionality_reduction.svd import SingularValueDecomposition
+from utils.dimensionality_reduction.pca import PrincipalComponentAnalysis
+from utils.feature_models.hog import HistogramOfGradients
+from utils.feature_models.elbp import ExtendedLocalBinaryPattern
+from utils.feature_models.cm import ColorMoments
+from utils.image_reader import ImageReader
 
 COLOR_MOMENTS = 'CM'
 EXTENDED_LBP = 'ELBP'
@@ -29,7 +27,9 @@ LATENT_DIRICHLET_ALLOCATION = 'LDA'
 KMEANS = 'kmeans'
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+logging.basicConfig(filename="logs/logs.log", filemode="w", level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+
 
 class Task1:
     def __init__(self):
@@ -38,13 +38,15 @@ class Task1:
     def setup_args_parser(self):
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS], required=True)
+        parser.add_argument(
+            '--model', type=str, choices=[COLOR_MOMENTS, EXTENDED_LBP, HISTOGRAM_OF_GRADIENTS], required=True)
         parser.add_argument('--x', type=str, required=True)
         parser.add_argument('--k', type=int, required=True)
-        parser.add_argument('--dimensionality_reduction_technique', type=str, choices=[PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION, LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
+        parser.add_argument('--dimensionality_reduction_technique', type=str, choices=[
+                            PRINCIPAL_COMPONENT_ANALYSIS, SINGULAR_VALUE_DECOMPOSITION, LATENT_DIRICHLET_ALLOCATION, KMEANS], required=True)
         parser.add_argument('--images_folder_path', type=str, required=True)
         parser.add_argument('--output_folder_path', type=str, required=True)
-        
+
         return parser
 
     def log_args(self, args):
@@ -52,7 +54,8 @@ class Task1:
         logger.debug(f'model - {args.model}')
         logger.debug(f'x - {args.x}')
         logger.debug(f'k - {args.k}')
-        logger.debug(f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
+        logger.debug(
+            f'dimensionality_reduction_technique - {args.dimensionality_reduction_technique}')
         logger.debug(f'images_folder_path - {args.images_folder_path}')
         logger.debug(f'output_folder_path - {args.output_folder_path}')
 
@@ -76,7 +79,8 @@ class Task1:
         elif dimensionality_reduction_technique == KMEANS:
             return KMeans().compute(images, k)
         else:
-            raise Exception(f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
+            raise Exception(
+                f"Unknown dimensionality reduction technique - {dimensionality_reduction_technique}")
 
     def get_distinct_subject_ids(self, images):
         distinct_subject_ids = set()
@@ -91,7 +95,7 @@ class Task1:
 
         subjects = []
 
-        # Group images for each distinct subject_id 
+        # Group images for each distinct subject_id
         for subject_id in subject_ids:
             subject_images = []
             for image in images:
@@ -113,26 +117,31 @@ class Task1:
             # dataset_feature_vector, standardized_dataset_feature_vector, eigen_values, eigen_vectors, k_principal_components_eigen_vectors
             drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].real.tolist()
             drt_attributes['standardized_dataset_feature_vector'] = drt_attributes['standardized_dataset_feature_vector'].real.tolist()
-            drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist()
-            drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist()
+            drt_attributes['eigen_values'] = drt_attributes['eigen_values'].real.tolist(
+            )
+            drt_attributes['eigen_vectors'] = drt_attributes['eigen_vectors'].real.tolist(
+            )
             drt_attributes['k_principal_components_eigen_vectors'] = drt_attributes['k_principal_components_eigen_vectors'].real.tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].real.tolist()
-        
+
         elif dimensionality_reduction_technique == SINGULAR_VALUE_DECOMPOSITION:
             #right_factor_matrix (V_t)
-            drt_attributes['right_factor_matrix'] = drt_attributes['right_factor_matrix'].tolist()
+            drt_attributes['right_factor_matrix'] = drt_attributes['right_factor_matrix'].tolist(
+            )
 
-        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION: 
+        elif dimensionality_reduction_technique == LATENT_DIRICHLET_ALLOCATION:
             # dataset_feature_vector, reduced_dataset_feature_vector
-            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist(
+            )
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
 
-        elif dimensionality_reduction_technique == KMEANS: 
+        elif dimensionality_reduction_technique == KMEANS:
             # dataset_feature_vector, centroids, reduced_dataset_feature_vector
-            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist()
+            drt_attributes['dataset_feature_vector'] = drt_attributes['dataset_feature_vector'].tolist(
+            )
             drt_attributes['centroids'] = drt_attributes['centroids'].tolist()
             drt_attributes['reduced_dataset_feature_vector'] = drt_attributes['reduced_dataset_feature_vector'].tolist()
-        
+
         return drt_attributes
 
     def build_output(self, args, images, drt_attributes, subjects, subject_weight_matrix):
@@ -146,21 +155,25 @@ class Task1:
             subject.feature_vector = subject.feature_vector.real.tolist()
             subject.reduced_feature_vector = subject.reduced_feature_vector.real.tolist()
 
-        drt_attributes = self.preprocess_drt_attributes_for_output(args.dimensionality_reduction_technique, drt_attributes)
+        drt_attributes = self.preprocess_drt_attributes_for_output(
+            args.dimensionality_reduction_technique, drt_attributes)
 
         subject_weight_matrix = subject_weight_matrix.real.tolist()
 
         sorted_subject_weight_matrix = []
         for i in range(len(subject_weight_matrix[0])):
-            subject_weight_pairs = dict.fromkeys(['Latent Semantic', 'Subjects', 'Weights'])
+            subject_weight_pairs = dict.fromkeys(
+                ['Latent Semantic', 'Subjects', 'Weights'])
             subjects = []
             weights = []
             for j in range(len(subject_weight_matrix)):
                 subjects.append(str(j))
                 weights.append(subject_weight_matrix[j][i])
             subject_weight_pairs['Latent Semantic'] = i
-            subject_weight_pairs['Weights'] = [x for x,_ in sorted(zip(weights,subjects), reverse=True)]
-            subject_weight_pairs['Subjects'] = [x for _,x in sorted(zip(weights,subjects), reverse=True)]
+            subject_weight_pairs['Weights'] = [
+                x for x, _ in sorted(zip(weights, subjects), reverse=True)]
+            subject_weight_pairs['Subjects'] = [
+                x for _, x in sorted(zip(weights, subjects), reverse=True)]
             sorted_subject_weight_matrix.append(subject_weight_pairs)
 
         # 2. Prepare dictionary that should be JSONfied to store in JSON file
@@ -176,16 +189,20 @@ class Task1:
             },
             'images': images,
             'subjects': subjects,
-            'drt_attributes': drt_attributes, 
+            'drt_attributes': drt_attributes,
             'subject_weight_matrix': sorted_subject_weight_matrix
         }
         return output
 
     def save_output(self, output, output_folder_path):
         OUTPUT_FILE_NAME = 'output.json'
-        timestamp_folder_path = Output().create_timestamp_folder(output_folder_path) # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
-        output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
+        # /Outputs/Task1 -> /Outputs/Task1/2021-10-21-23-25-23
+        timestamp_folder_path = Output().create_timestamp_folder(output_folder_path)
+        # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
+        output_json_path = os.path.join(
+            timestamp_folder_path, OUTPUT_FILE_NAME)
         Output().save_dict_as_json_file(output, output_json_path)
+
 
 def main():
     task = Task1()
@@ -197,20 +214,24 @@ def main():
 
     image_reader = ImageReader()
 
-    images = image_reader.get_images_by_subjects(args.images_folder_path, args.x)
+    images = image_reader.get_images_by_subjects(
+        args.images_folder_path, args.x)
 
     images = task.compute_feature_vectors(args.model, images)
-    
+
     # drt = dimensionality reduction technique
-    images, drt_attributes = task.reduce_dimensions(args.dimensionality_reduction_technique, images, args.k)
+    images, drt_attributes = task.reduce_dimensions(
+        args.dimensionality_reduction_technique, images, args.k)
 
     subjects = task.assign_images_to_subjects(images)
 
     subject_weight_matrix = task.compute_subject_weight_matrix(subjects)
 
-    output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
+    output = task.build_output(
+        args, images, drt_attributes, subjects, subject_weight_matrix)
 
     task.save_output(output, args.output_folder_path)
+
 
 if __name__ == "__main__":
     main()
