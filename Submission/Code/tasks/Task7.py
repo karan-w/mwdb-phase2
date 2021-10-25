@@ -71,7 +71,7 @@ class Task7:
         else:
             raise Exception(f"Unknown feature model - {feature_model}")
 
-    def compute_reprojection_matrix(self, drt_technique):
+    def compute_reprojection_matrix(self, drt_technique, attributes):
         reproject_matrix = None
         if drt_technique == PRINCIPAL_COMPONENT_ANALYSIS:
             reproject_matrix = np.array(attributes['k_principal_components_eigen_vectors'])
@@ -154,7 +154,7 @@ def main():
     query_image = np.reshape(query_image, (1, -1))
 
     #collecting the reprojection matrix (1 x m) to reduce (or reproject) query image onto latent space
-    reprojection_matrix = task.compute_reprojection_matrix(drt_technique)
+    reprojection_matrix = task.compute_reprojection_matrix(drt_technique, attributes)
 
     reduced_query_feature_vector = task.reduce_dimensions(drt_technique, query_image, reprojection_matrix)
 
