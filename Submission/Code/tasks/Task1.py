@@ -187,7 +187,7 @@ class Task1:
         output_json_path = os.path.join(timestamp_folder_path, OUTPUT_FILE_NAME) # /Outputs/Task1/2021-10-21-23-25-23 -> /Outputs/Task1/2021-10-21-23-25-23/output.json
         Output().save_dict_as_json_file(output, output_json_path)
 
-if __name__ == "__main__":
+def main():
     task = Task1()
     parser = task.setup_args_parser()
 
@@ -211,3 +211,6 @@ if __name__ == "__main__":
     output = task.build_output(args, images, drt_attributes, subjects, subject_weight_matrix)
 
     task.save_output(output, args.output_folder_path)
+
+if __name__ == "__main__":
+    main()
