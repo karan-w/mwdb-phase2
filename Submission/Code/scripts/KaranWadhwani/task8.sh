@@ -4,7 +4,7 @@
 
 # subject_subject_similarity_matrix_filepath, n, m 
 
-subject_subject_similarity_matrix_filepath="/Users/karanwadhwani/Documents/ASU/Fall2021/CSE515_MWDB/Project/mwdb-phase2/Inputs/Task8/output.json"
+subject_subject_similarity_matrix_filepath="/Users/karanwadhwani/Documents/ASU/Fall2021/CSE515_MWDB/Project/mwdb-phase2/Submission/Outputs/Task4/2021-10-24_20-28-58/output.json"
 number_of_subjects=40
 n=10
 m=10
